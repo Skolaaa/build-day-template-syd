@@ -81,3 +81,7 @@ bun run deploy
 ```
 
 That builds and runs `wrangler deploy`. The URL is printed at the end; open `/notes` on it to confirm the database connection. Repeat step 3 only when a secret changes.
+
+## License
+
+[MIT](LICENSE)
