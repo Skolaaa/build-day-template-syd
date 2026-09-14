@@ -11,6 +11,42 @@ A [TanStack Start](https://tanstack.com/start) app deployed on Cloudflare Worker
 - `@clerk/hono`'s `clerkMiddleware()` runs globally, so `getAuth(c)` is available in any Hono route.
 - On the TanStack Start side, `src/start.ts` wires the same auth in via `@clerk/tanstack-react-start`'s `clerkMiddleware()`, and `src/routes/__root.tsx` wraps the app in `<ClerkProvider>`.
 
+## Clerk integration
+
+Clerk handles auth in two layers, because a request goes to either Hono or TanStack Start:
+
+| Layer | Package | Where | Gives you |
+| --- | --- | --- | --- |
+| Hono routes | `@clerk/hono` | `src/server.ts` | `getAuth(c)` in any `app.get(...)` handler, e.g. `/api/health` returns the current `userId` |
+| TanStack Start | `@clerk/tanstack-react-start` | `src/start.ts` (request middleware, after CSRF) | auth state for SSR pages and server functions |
+| React UI | `@clerk/tanstack-react-start` | `src/integrations/clerk/` | `<ClerkProvider>`, `<Show>`, `<UserButton>`, `<SignIn>`, `useUser()` |
+
+Both middlewares read the same keys, so a session cookie set by the Clerk UI is valid on either side. `@clerk/backend` is used directly where the app calls Clerk's Backend API (`/api/dev-login` and `scripts/create-dev-user.ts`).
+
+### Files
+
+- `src/integrations/clerk/provider.tsx` wraps `<ClerkProvider>` with an `appearance` config. Clerk's components render in a shadow root that the app's CSS variables can't reach, so the brand colors and font from `styles.css` are restated there. Change them in both places.
+- `src/integrations/clerk/header-user.tsx` shows `<UserButton>` when signed in and a "Sign in" link to `/login` when signed out. `src/components/header.tsx` renders it.
+- `src/routes/login.tsx` renders Clerk's `<SignIn routing="hash" />` for signed-out visitors and a profile card for signed-in ones. Hash routing keeps Clerk's multi-step sign-in flow on `/login` without extra catch-all routes.
+
+### Protecting things
+
+- Hono route: `const { userId } = getAuth(c)`, then return 401 if `userId` is null.
+- React: wrap content in `<Show when="signed-in">` / `<Show when="signed-out">`, or read `useUser()`.
+- TanStack server functions and loaders: use the `auth()` helper from `@clerk/tanstack-react-start/server`. No route uses it yet.
+
+### Dev login
+
+For local testing and browser automation there's a one-click login that skips the Clerk UI:
+
+1. Set `DEV_LOGIN_EMAIL` and `DEV_LOGIN_PASSWORD` in `.env.local`.
+2. Run `bun run create-dev-user` to create the user in your Clerk instance, or reset the password of an existing one.
+3. In `bun run dev`, `/login` shows a "Dev login (local only)" button.
+
+The button hits `GET /api/dev-login`. That route looks up the user and mints a 60-second Clerk sign-in token, then redirects to `/dev-login?token=...`. The `/dev-login` page redeems the token with `signIn.ticket()` and `signIn.finalize()`, which creates a real Clerk session and sends you to `/`.
+
+The route returns 404 unless `DEV_LOGIN_EMAIL` is set, and that is the only thing protecting it. Never set `DEV_LOGIN_*` on a deployed Worker. (The button is hidden outside dev builds, but the API route doesn't check for dev mode.)
+
 ## Develop
 
 ```bash
