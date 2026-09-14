@@ -1,7 +1,6 @@
 ---
 name: remove-clerk
 description: Strip Clerk auth out of apps/web entirely - middleware, provider, header user button, /login, dev login, env vars, dependencies and docs.
-disable-model-invocation: true
 allowed-tools: Bash(git:*), Bash(bun:*), Read, Edit, Write
 ---
 
@@ -72,7 +71,7 @@ Remove the prose that describes the removed behaviour:
 
 Done means all three hold:
 
-- `git grep -il --untracked -E 'clerk|dev-login|dev_login|create-dev-user' -- ':!.claude/skills/remove-clerk'`
+- `git grep -il --untracked -E 'clerk|dev-login|dev_login|create-dev-user' -- ':!.claude/skills/remove-clerk' ':!.claude/skills/project-init'`
   returns nothing (it skips gitignored paths, so build output and
   `.env.local` are out of scope here). Each hit is a leftover: remove it, or
   rewrite the sentence if it only mentions Clerk in passing.
