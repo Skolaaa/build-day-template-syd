@@ -1,0 +1,25 @@
+{
+  "name": "boilerplate",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "turbo run build",
+    "check": "ultracite check && turbo run typecheck",
+    "deploy": "turbo run deploy",
+    "dev": "turbo run dev",
+    "fix": "ultracite fix",
+    "prepare": "husky && turbo run cf-typegen",
+    "preview": "turbo run preview"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.6",
+    "husky": "^9.1.7",
+    "turbo": "^2.10.11",
+    "typescript": "^5.9.2",
+    "ultracite": "7.10.5"
+  },
+  "packageManager": "bun@1.3.11"
+}
