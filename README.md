@@ -43,7 +43,7 @@ cd apps/web
 bunx wrangler login
 ```
 
-If you belong to more than one Cloudflare account, `wrangler deploy` will ask which one to use. The Worker's name comes from `apps/web/wrangler.jsonc` (the `rename-project` skill sets it).
+If you belong to more than one Cloudflare account, `wrangler deploy` will ask which one to use; set `CLOUDFLARE_ACCOUNT_ID` in `apps/web/.env.local` to skip the prompt. The Worker's name comes from `apps/web/wrangler.jsonc` (the `rename-project` skill sets it).
 
 ### 2. A MongoDB Atlas database
 

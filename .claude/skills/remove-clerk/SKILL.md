@@ -22,6 +22,7 @@ step 7.
 - `apps/web/src/routes/login.tsx`
 - `apps/web/src/routes/dev-login.tsx`
 - `apps/web/scripts/create-dev-user.ts`
+- `.claude/skills/setup-clerk/` (the whole folder)
 
 ## 2. Unwire the server
 
@@ -66,6 +67,11 @@ Remove the prose that describes the removed behaviour:
   paragraph under Develop, and the `wrangler secret put` block (with the
   sentence introducing it) under Build & deploy.
 - `CLAUDE.md` and `.claude/CLAUDE.md`: the `## Dev login (testing)` sections.
+- `.claude/skills/setup-cloudflare/`: the Clerk keys are the only thing its
+  `env.ts secrets-file` command uploads. Delete that command, the
+  `DEPLOYED_KEYS` list and the comment above it, and reduce the deploy step in
+  `SKILL.md` to
+  `bun run --cwd apps/web build` and `bun x wrangler --cwd apps/web deploy`.
 
 ## 7. Verify
 
