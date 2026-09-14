@@ -112,6 +112,30 @@ output. Never hand-edit them, and put nothing else in `components/ui/`. `biome.j
 excludes them at the `files` level because `ultracite fix` corrupts them. See
 `apps/web/src/components/ui/CLAUDE.md`.
 
+## MongoDB
+
+Data access lives in `packages/mongo` (`@repo/mongo`), see its README. Rules that
+are easy to break:
+
+- Server code imports `@repo/mongo` / `@repo/mongo/notes`; anything a React
+  component needs comes from `@repo/mongo/shared`. The other entries pull the driver
+  into the browser bundle. One entry per module in `exports`, no barrel file.
+- Use `withDb(uri, fn)`; never cache a `MongoClient` at module scope. Workers tie
+  sockets to the request that opened them, and a cached client hangs the next request.
+- The driver stays on 6.x until Bun implements `v8.startupSnapshot` (bson 7 breaks
+  `bun test`).
+- Local database: `bun run dev` (root or `packages/mongo`) starts a real `mongod` via
+  mongodb-memory-server, data in `.mongo-data`. No Docker.
+
+## Deploy
+
+Local dev needs no accounts. Deploying needs a Cloudflare account (`bunx wrangler
+login`) and a MongoDB Atlas cluster with Network Access open to `0.0.0.0/0`. Before the
+first `bun run deploy`, set `MONGODB_URI` (the Atlas string, database name in the path)
+and the three Clerk keys with `wrangler secret put` in `apps/web`, and run
+`ensure-indexes` in `packages/mongo` against Atlas once. Never set `DEV_LOGIN_*` on a
+deployed Worker. Full steps: README.md "Deploy".
+
 ## Dev login (testing)
 
 `apps/web` exposes a one-click dev login for local testing: `/login` has a

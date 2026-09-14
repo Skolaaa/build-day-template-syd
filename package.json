@@ -3,7 +3,8 @@
   "private": true,
   "type": "module",
   "workspaces": [
-    "apps/*"
+    "apps/*",
+    "packages/*"
   ],
   "scripts": {
     "build": "turbo run build",
@@ -12,7 +13,8 @@
     "dev": "turbo run dev",
     "fix": "ultracite fix",
     "prepare": "husky && turbo run cf-typegen",
-    "preview": "turbo run preview"
+    "preview": "turbo run preview",
+    "test": "turbo run test"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.6",

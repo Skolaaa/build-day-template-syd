@@ -1,0 +1,24 @@
+{
+  "name": "@repo/mongo",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/client.ts",
+    "./notes": "./src/notes.ts",
+    "./shared": "./src/shared.ts"
+  },
+  "scripts": {
+    "dev": "bun scripts/local-db.ts",
+    "ensure-indexes": "bun scripts/ensure-indexes.ts",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "mongodb": "^6.21.0"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "mongodb-memory-server": "^10.4.3",
+    "typescript": "^5.9.2"
+  }
+}

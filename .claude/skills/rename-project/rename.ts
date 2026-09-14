@@ -58,6 +58,10 @@ const appFiles = async (pattern: string) => {
 
 const nameField = new RegExp(`("name":\\s*)"${oldName}"`);
 const heading = new RegExp(`^# ${oldTitle}$`, "m");
+// The database name is the path of a MongoDB connection string. Matching the
+// whole `mongodb://host/<name>` shape leaves any other URI (say, an Atlas
+// cluster with its own database name in .env.local) alone.
+const databaseName = new RegExp(`(mongodb://[^/\\s\`]+/)${oldName}\\b`, "g");
 
 const rewrites: Rewrite[] = [
   {
@@ -98,6 +102,19 @@ for (const path of await appFiles("apps/*/README.md")) {
     find: heading,
     to: `# ${newTitle}`,
     what: "heading",
+  });
+}
+const databaseFiles = [
+  ...(await appFiles("apps/*/.env.example")),
+  ...(await appFiles("apps/*/.env.local")),
+  "packages/mongo/README.md",
+];
+for (const path of databaseFiles) {
+  rewrites.push({
+    file: path,
+    find: databaseName,
+    to: `$1${newName}`,
+    what: "MongoDB database name",
   });
 }
 for (const path of await appFiles("apps/*/src/routes/__root.tsx")) {

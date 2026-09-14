@@ -1,6 +1,6 @@
 # Boilerplate
 
-A [TanStack Start](https://tanstack.com/start) app deployed on Cloudflare Workers, with [Hono](https://hono.dev) as the top-level `fetch` handler and [Clerk](https://clerk.com) for auth.
+A [TanStack Start](https://tanstack.com/start) app deployed on Cloudflare Workers, with [Hono](https://hono.dev) as the top-level `fetch` handler, [Clerk](https://clerk.com) for auth and [MongoDB](https://www.mongodb.com) for data.
 
 ## Architecture
 
@@ -47,6 +47,16 @@ The button hits `GET /api/dev-login`. That route looks up the user and mints a 6
 
 The route returns 404 unless `DEV_LOGIN_EMAIL` is set, and that is the only thing protecting it. Never set `DEV_LOGIN_*` on a deployed Worker. (The button is hidden outside dev builds, but the API route doesn't check for dev mode.)
 
+## MongoDB
+
+Database access goes through the workspace package [`@repo/mongo`](../../packages/mongo) (see its README for the driver setup, the local database and the Workers-specific reasoning). In this app:
+
+- `src/server/notes.ts` holds the server functions. Each handler wraps its work in `withDb(env.MONGODB_URI, ...)`, with `env` from `cloudflare:workers`. That is the one place the connection string is read.
+- `src/routes/notes.tsx` is the example page: the loader calls `listNotesFn`, the form calls `createNoteFn` and invalidates the router. Its `errorComponent` renders a "could not reach MongoDB" panel, which is what you see when the local database is not running.
+- Browser code imports only `@repo/mongo/shared`. The package root imports the driver and belongs in server functions (or Hono routes: `withDb(c.env.MONGODB_URI, ...)` works there too).
+
+`MONGODB_URI` names the database in its path. The default in `.env.example` points at the local server that `bun run dev` starts; for Atlas, paste the cluster's `mongodb+srv://` string instead.
+
 ## Develop
 
 ```bash
@@ -54,7 +64,7 @@ bun install
 bun run dev
 ```
 
-Requires Clerk keys in `.env.local` (see `.env.example`): `VITE_CLERK_PUBLISHABLE_KEY` / `CLERK_PUBLISHABLE_KEY` (same value) and `CLERK_SECRET_KEY`. Pull your own with `clerk env pull` after `clerk link --app <app_id>`.
+Requires Clerk keys in `.env.local` (see `.env.example`): `VITE_CLERK_PUBLISHABLE_KEY` / `CLERK_PUBLISHABLE_KEY` (same value) and `CLERK_SECRET_KEY`. Pull your own with `clerk env pull` after `clerk link --app <app_id>`. `MONGODB_URI` can stay at its `.env.example` default for local work.
 
 ## Build & deploy
 
@@ -64,6 +74,14 @@ Requires Clerk keys in `.env.local` (see `.env.example`): `VITE_CLERK_PUBLISHABL
 wrangler secret put CLERK_SECRET_KEY
 wrangler secret put CLERK_PUBLISHABLE_KEY
 wrangler secret put VITE_CLERK_PUBLISHABLE_KEY
+wrangler secret put MONGODB_URI
+```
+
+`MONGODB_URI` must be an Atlas (or otherwise reachable) connection string; the local server only exists on your machine. Use the cluster's `mongodb+srv://...` string with the database name in its path, and allow connections from anywhere in Atlas Network Access (Workers have no fixed egress IPs). Then create the indexes once against that database:
+
+```bash
+cd ../../packages/mongo
+MONGODB_URI='mongodb+srv://...' bun run ensure-indexes
 ```
 
 Then:

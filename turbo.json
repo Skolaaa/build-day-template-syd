@@ -23,6 +23,9 @@
       "cache": false,
       "persistent": true
     },
+    "test": {
+      "cache": false
+    },
     "typecheck": {
       "dependsOn": ["cf-typegen"]
     }
