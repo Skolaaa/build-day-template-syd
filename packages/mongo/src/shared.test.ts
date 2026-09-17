@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import {
+  contrast,
   countWords,
   excerptOf,
   formatCount,
@@ -13,9 +14,14 @@ import {
   periodLabel,
   periodRange,
   periodRangeLabel,
+  SPINE_INK_DARK,
+  SPINE_INK_LIGHT,
   SPINE_PALETTE,
   shiftPeriodKey,
+  spineFaceFor,
+  spineFoilFor,
   spineHeight,
+  spineInkFor,
   spineThickness,
 } from "./shared.ts";
 
@@ -127,10 +133,41 @@ describe("spines", () => {
     expect(heights.size).toBeGreaterThan(1);
   });
 
-  test("every cloth colour clears 4.5:1 under near-white spine text", () => {
+  test("every cloth colour clears 4.5:1 under the ink chosen for it", () => {
     for (const hex of SPINE_PALETTE) {
-      expect(contrast(hex, "#ffffff")).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(hex, spineInkFor(hex))).toBeGreaterThanOrEqual(4.5);
     }
+  });
+
+  test("pale cloth is stamped in dark ink, dark cloth in cream", () => {
+    expect(spineInkFor("#f1e6c8")).toBe(SPINE_INK_DARK);
+    expect(spineInkFor("#3f5b52")).toBe(SPINE_INK_LIGHT);
+    expect(contrast("#ffffff", "#000000")).toBeCloseTo(21, 0);
+  });
+
+  test("foil follows the cloth: gold where it reads, black or pewter between", () => {
+    expect(spineFoilFor("#4a4a6a")).toBe("light");
+    expect(spineFoilFor("#e8d5a8")).toBe("dark");
+    expect(spineFoilFor("#c9973a")).toBe("black");
+    expect(spineFoilFor("#6f7f8e")).toBe("silver");
+    for (const hex of SPINE_PALETTE) {
+      expect(["dark", "light"]).toContain(spineFoilFor(hex));
+    }
+  });
+
+  test("the face splits a period into a short title and a foot", () => {
+    expect(
+      spineFaceFor({ named: false, periodKey: "2023-09", title: "" })
+    ).toEqual({ foot: "2023", title: "September" });
+    expect(
+      spineFaceFor({ named: false, periodKey: "2026-W38", title: "" })
+    ).toEqual({ foot: "2026", title: "Week 38" });
+    expect(
+      spineFaceFor({ named: false, periodKey: "2024", title: "" })
+    ).toEqual({ foot: null, title: "2024" });
+    expect(
+      spineFaceFor({ named: true, periodKey: "2026-W02", title: "Snow" })
+    ).toEqual({ foot: "W2 2026", title: "Snow" });
   });
 });
 
@@ -183,18 +220,3 @@ describe("text", () => {
     expect(formatCount(1_234_567)).toBe("1,234,567");
   });
 });
-
-// WCAG relative luminance, so the palette check is a real number and not a guess.
-function contrast(a: string, b: string): number {
-  const la = luminance(a);
-  const lb = luminance(b);
-  return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
-}
-
-function luminance(hex: string): number {
-  const channel = (i: number) => {
-    const c = Number.parseInt(hex.slice(i, i + 2), 16) / 255;
-    return c <= 0.039_28 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-  };
-  return 0.2126 * channel(1) + 0.7152 * channel(3) + 0.0722 * channel(5);
-}

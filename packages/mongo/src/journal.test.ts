@@ -312,6 +312,10 @@ describe("search, tags, on this day, atlas", () => {
   test("atlas rolls the journal up by week, month, hour and weekday", async () => {
     const atlas = await getAtlas(db, ALICE, "year", "2026-09-17");
     expect(atlas.weeks.find((w) => w.week === "2026-W01")?.entries).toBe(5);
+    expect(atlas.days.map((d) => d.date)).toEqual(
+      [...atlas.days.map((d) => d.date)].sort()
+    );
+    expect(atlas.days.length).toBe(atlas.stats.entries);
     expect(atlas.months.find((m) => m.month === "2025-12")?.mood).toBe(4);
     // The hour is captured when a page is first started, never on later edits.
     expect(atlas.hours[21]).toBe(8);

@@ -12,6 +12,7 @@ import type { Collection, Db, Document, ObjectId } from "mongodb";
 import { ObjectId as ObjectIdCtor } from "mongodb";
 import {
   type Atlas,
+  type AtlasDay,
   type AtlasMonth,
   type AtlasWeek,
   BODY_MAX_LENGTH,
@@ -23,6 +24,7 @@ import {
   type EntrySummary,
   excerptOf,
   granularityOf,
+  HEX_COLOR,
   isIsoDate,
   isMood,
   isPeriodKey,
@@ -41,7 +43,6 @@ import {
   type SearchHit,
   type Shelf,
   type ShelfStats,
-  SPINE_PALETTE,
   spineColorFor,
   TAG_MAX_COUNT,
   TAG_MAX_LENGTH,
@@ -279,8 +280,6 @@ function validateEntryInput(input: EntryInput): {
   };
 }
 
-const HEX_COLOR = /^#[0-9a-f]{6}$/i;
-
 function validateVolumeMeta(input: VolumeMetaInput): VolumeMetaInput {
   const title =
     typeof input.title === "string" && input.title.trim().length > 0
@@ -303,9 +302,6 @@ function validateVolumeMeta(input: VolumeMetaInput): VolumeMetaInput {
   const color = typeof input.color === "string" ? input.color : null;
   if (color && !HEX_COLOR.test(color)) {
     throw new Error("Colour must be a hex value like #3f5b52.");
-  }
-  if (color && !(SPINE_PALETTE as readonly string[]).includes(color)) {
-    throw new Error("Colour must be one of the cloth colours.");
   }
   return { color, subtitle, title };
 }
@@ -993,7 +989,13 @@ export async function getAtlas(
 ): Promise<Atlas> {
   const shelf = await getShelf(db, userId, period, today);
   const col = entries(db);
-  const [weeks, months, hourRows, weekdayRows, tags] = await Promise.all([
+  const [days, weeks, months, hourRows, weekdayRows, tags] = await Promise.all([
+    col
+      .find<AtlasDay>(
+        { userId },
+        { projection: { _id: 0, date: 1, words: 1 }, sort: { date: 1 } }
+      )
+      .toArray(),
     col
       .aggregate<AtlasWeek>([
         { $match: { userId } },
@@ -1060,6 +1062,7 @@ export async function getAtlas(
     weekdays[row._id - 1] = row.count;
   }
   return {
+    days,
     hours,
     months,
     stats: shelf.stats,

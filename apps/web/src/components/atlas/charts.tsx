@@ -29,17 +29,23 @@ const TOOLTIP_STYLE = {
 export function VizCard({
   title,
   subtitle,
+  aside,
   children,
 }: {
+  /** A control that belongs to this picture, set against the title. */
+  aside?: ReactNode;
   children: ReactNode;
   subtitle?: string;
   title: string;
 }) {
   return (
     <section className="viz-card">
-      <header className="mb-4">
-        <h2 className="viz-title">{title}</h2>
-        {subtitle ? <p className="viz-subtitle">{subtitle}</p> : null}
+      <header className="mb-4 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
+        <div>
+          <h2 className="viz-title">{title}</h2>
+          {subtitle ? <p className="viz-subtitle">{subtitle}</p> : null}
+        </div>
+        {aside}
       </header>
       {children}
     </section>

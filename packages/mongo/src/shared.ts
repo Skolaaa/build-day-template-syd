@@ -146,6 +146,47 @@ export function periodLabel(periodKey: string): string {
   return `Week ${Number(week)}, ${year}`;
 }
 
+/** The period as it fits on a spine's foot: "Sep 2023", "W38 2026", "2023". */
+export function periodShortLabel(periodKey: string): string {
+  const granularity = granularityOf(periodKey);
+  if (granularity === "year") {
+    return periodKey;
+  }
+  if (granularity === "month") {
+    return format(parseIsoDate(`${periodKey}-01`), "MMM yyyy");
+  }
+  const [year, week] = periodKey.split("-W");
+  return `W${Number(week)} ${year}`;
+}
+
+/**
+ * What is stamped on a spine: a short title through the middle and, when
+ * the title does not already say it, the period in small figures at the
+ * foot. A month volume reads "September" over "2023", not "September 2023"
+ * squeezed against the bands.
+ */
+export function spineFaceFor(volume: {
+  named: boolean;
+  periodKey: string;
+  title: string;
+}): { foot: string | null; title: string } {
+  if (volume.named) {
+    return { foot: periodShortLabel(volume.periodKey), title: volume.title };
+  }
+  const granularity = granularityOf(volume.periodKey);
+  if (granularity === "year") {
+    return { foot: null, title: volume.periodKey };
+  }
+  if (granularity === "month") {
+    return {
+      foot: volume.periodKey.slice(0, 4),
+      title: format(parseIsoDate(`${volume.periodKey}-01`), "MMMM"),
+    };
+  }
+  const [year, week] = volume.periodKey.split("-W");
+  return { foot: year ?? null, title: `Week ${Number(week)}` };
+}
+
 /** The dates a volume covers, as a person would say them. */
 export function periodRangeLabel(periodKey: string): string {
   const granularity = granularityOf(periodKey);
@@ -186,20 +227,31 @@ export function formatMonthYear(month: string): string {
 // ------------------------------------------------------------------ shelf
 
 /**
- * Cloth colours for spines: muted library bindings. Each one clears 4.5:1
- * against the near-white spine text (checked in shared.test.ts).
+ * Cloth colours for spines: library bindings, deep enough that gold foil
+ * reads on every one of them, plus a cream that takes old gold instead.
+ * Each clears 4.5:1 under its foil (checked in shared.test.ts).
  */
 export const SPINE_PALETTE = [
   "#7d4a3b", // oxblood
   "#3f5b52", // bottle green
   "#4a4a6a", // slate blue
-  "#8a6b3d", // tan
+  "#6f5631", // tan
   "#5c3b4a", // plum
   "#3d5a6c", // teal
-  "#6b5b3d", // olive
+  "#67583b", // olive
   "#4a5d3b", // moss
   "#6a3f4f", // wine
   "#3b4f5c", // navy
+  "#8c4635", // brick
+  "#725521", // ochre
+  "#4d5e40", // sage
+  "#31635f", // sea green
+  "#784e50", // dusty rose
+  "#e8d5a8", // cream
+  "#475d6e", // slate
+  "#5f566f", // heather
+  "#8e452e", // terracotta
+  "#2f5d4a", // forest
 ] as const;
 
 /** FNV-1a: cheap, stable, and spreads similar keys ("2026-09", "2026-10") apart. */
@@ -218,6 +270,64 @@ export function spineColorFor(periodKey: string): string {
   return SPINE_PALETTE[hashKey(periodKey) % SPINE_PALETTE.length] as string;
 }
 
+export const HEX_COLOR = /^#[0-9a-f]{6}$/i;
+
+/** WCAG relative luminance of a `#rrggbb` colour, 0 (black) to 1 (white). */
+export function luminance(hex: string): number {
+  const channel = (i: number) => {
+    const c = Number.parseInt(hex.slice(i, i + 2), 16) / 255;
+    return c <= 0.039_28 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  };
+  return 0.2126 * channel(1) + 0.7152 * channel(3) + 0.0722 * channel(5);
+}
+
+/** WCAG contrast ratio between two `#rrggbb` colours, 1 to 21. */
+export function contrast(a: string, b: string): number {
+  const la = luminance(a);
+  const lb = luminance(b);
+  return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+}
+
+/** Foil colours a title can be stamped in: cream on dark cloth, ink on pale. */
+export const SPINE_INK_LIGHT = "#fbf7ee";
+export const SPINE_INK_DARK = "#2b2520";
+
+/**
+ * The cloth can now be any colour, so the stamped title picks whichever ink
+ * reads better on it. Anything the palette offers takes the cream.
+ */
+export function spineInkFor(color: string): string {
+  return contrast(color, SPINE_INK_LIGHT) >= contrast(color, SPINE_INK_DARK)
+    ? SPINE_INK_LIGHT
+    : SPINE_INK_DARK;
+}
+
+/** The middle of each foil's gradient: what the contrast check sees. */
+const FOIL_LIGHT_MID = "#ecd292";
+const FOIL_DARK_MID = "#6b4f1c";
+const TEXT_MIN_CONTRAST = 4.5;
+
+export type SpineFoil = "black" | "dark" | "light" | "silver";
+
+/**
+ * Titles are stamped in foil. Pale gold on dark cloth, old gold on pale
+ * cloth; when neither reads on a mid-tone cloth the stamp is black or
+ * pewter instead, whichever the title ink would have been, so every book
+ * keeps the same glint and still clears 4.5:1.
+ */
+export function spineFoilFor(color: string): SpineFoil {
+  if (contrast(color, FOIL_LIGHT_MID) >= TEXT_MIN_CONTRAST) {
+    return "light";
+  }
+  if (contrast(color, FOIL_DARK_MID) >= TEXT_MIN_CONTRAST) {
+    return "dark";
+  }
+  return spineInkFor(color) === SPINE_INK_DARK ? "black" : "silver";
+}
+
+/** Every so often a book lies flat; this many stacked make a pile. */
+export const PILE_SIZE = 3;
+
 const SPINE_MIN_WIDTH = 36;
 const SPINE_MAX_WIDTH = 96;
 const SPINE_WIDTH_PER_ROOT_ENTRY = 7;
@@ -234,7 +344,7 @@ export function spineThickness(entries: number): number {
 }
 
 const SPINE_BASE_HEIGHT = 228;
-const SPINE_HEIGHT_STEPS = 5;
+const SPINE_HEIGHT_STEPS = 7;
 const SPINE_HEIGHT_STEP = 9;
 
 /**
@@ -504,6 +614,12 @@ export interface OnThisDayHit extends EntrySummary {
   periodsAgo: number;
 }
 
+export interface AtlasDay {
+  /** `2026-09-17`. */
+  date: string;
+  words: number;
+}
+
 export interface AtlasWeek {
   entries: number;
   /** ISO week key, `2026-W38`. */
@@ -520,6 +636,8 @@ export interface AtlasMonth {
 }
 
 export interface Atlas {
+  /** Every page, oldest first, for the life-in-days grid. */
+  days: AtlasDay[];
   /** Writing starts per hour of the reader's day, index 0 = midnight. */
   hours: number[];
   months: AtlasMonth[];

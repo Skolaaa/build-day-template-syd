@@ -7,7 +7,12 @@ import {
 } from "@repo/mongo/shared";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Bars, MoodLine, VizCard } from "#/components/atlas/charts";
-import { WeekGrid } from "#/components/atlas/week-grid";
+import {
+  GRID_GRANULARITIES,
+  GrainPicker,
+  LifeGrid,
+  useGridGranularity,
+} from "#/components/atlas/life-grid";
 import { JournalError, Loading } from "#/components/journal/states";
 import { getAtlasFn } from "#/server/journal";
 
@@ -44,8 +49,9 @@ function moodWord(value: number): string {
 }
 
 function AtlasPage() {
-  const { atlas, settings } = Route.useLoaderData();
+  const { atlas, settings, today } = Route.useLoaderData();
   const { stats } = atlas;
+  const [grain, setGrain] = useGridGranularity();
 
   if (stats.entries === 0) {
     return (
@@ -101,32 +107,17 @@ function AtlasPage() {
         The whole journal read back as a picture.
       </p>
 
-      <section className="panel mb-6 flex flex-wrap items-end gap-x-12 gap-y-8 px-7 py-6">
-        <div className="flex flex-col gap-0.5">
-          <span className="hero-value">{formatCount(stats.words)}</span>
-          <span className="text-[13px] text-ink-faint uppercase tracking-[0.06em]">
-            words
-          </span>
-        </div>
-        <dl className="m-0 flex flex-wrap gap-x-8 gap-y-3">
-          <Stat label="pages" value={formatCount(stats.entries)} />
-          <Stat
-            label={`volumes by ${settings.volumePeriod}`}
-            value={formatCount(stats.volumes)}
-          />
-          <Stat
-            label="longest run"
-            value={plural(stats.longestStreak, "day")}
-          />
-          <Stat
-            label="running now"
-            value={plural(stats.currentStreak, "day")}
-          />
-          {stats.firstEntry ? (
-            <Stat label="first page" value={formatLongDate(stats.firstEntry)} />
-          ) : null}
-        </dl>
-      </section>
+      <p className="mb-10 max-w-[58ch] font-serif text-[clamp(20px,2.6vw,26px)] text-ink leading-[1.45]">
+        {formatCount(stats.words)} words on {plural(stats.entries, "page")},
+        bound into {plural(stats.volumes, "volume")} by {settings.volumePeriod}
+        {stats.firstEntry ? (
+          <>, starting {formatLongDate(stats.firstEntry)}</>
+        ) : null}
+        .{" "}
+        <span className="text-ink-soft">
+          <Runs current={stats.currentStreak} longest={stats.longestStreak} />
+        </span>
+      </p>
 
       <div className="flex flex-col gap-6">
         <VizCard
@@ -141,10 +132,20 @@ function AtlasPage() {
         </VizCard>
 
         <VizCard
-          subtitle="One cell per week, darker where more was written."
-          title="A life in weeks"
+          aside={<GrainPicker onChange={setGrain} value={grain} />}
+          subtitle={`One cell per ${grain}, darker where more was written.`}
+          title={
+            GRID_GRANULARITIES.find((g) => g.key === grain)?.title ??
+            "A life in weeks"
+          }
         >
-          <WeekGrid weeks={atlas.weeks} />
+          <LifeGrid
+            days={atlas.days}
+            granularity={grain}
+            months={atlas.months}
+            today={today}
+            weeks={atlas.weeks}
+          />
         </VizCard>
 
         <div className="grid gap-6 md:grid-cols-2">
@@ -196,13 +197,14 @@ function AtlasPage() {
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex flex-col gap-0.5">
-      <dt className="text-[11.5px] text-ink-faint uppercase tracking-[0.07em]">
-        {label}
-      </dt>
-      <dd className="stat-value m-0">{value}</dd>
-    </div>
-  );
+/** The streaks, said plainly. */
+function Runs({ current, longest }: { current: number; longest: number }) {
+  if (longest <= 1) {
+    return null;
+  }
+  const running =
+    current > 1 ? `${plural(current, "day")} in a row right now` : null;
+  const best = `the longest run was ${plural(longest, "day")}`;
+  const line = running ? `${running}; ${best}` : best;
+  return <>{line.charAt(0).toUpperCase() + line.slice(1)}.</>;
 }

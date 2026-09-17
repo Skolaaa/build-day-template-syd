@@ -3,6 +3,7 @@ import {
   formatLongDate,
   periodKeyFor,
   plural,
+  type ShelfStats,
 } from "@repo/mongo/shared";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { EntryRow } from "#/components/journal/entry-row";
@@ -36,23 +37,14 @@ function ShelfPage() {
           The shelf
         </h1>
         {stats.entries === 0 ? null : (
-          <>
-            <p className="m-0 max-w-[60ch] text-ink-soft">
-              {plural(stats.entries, "entry", "entries")} across{" "}
-              {plural(stats.volumes, "volume")}, {formatCount(stats.words)}{" "}
-              words.
-              {stats.firstEntry ? (
-                <> The first was {formatLongDate(stats.firstEntry)}.</>
-              ) : null}
-            </p>
-            <div className="mt-3.5 flex flex-wrap gap-2">
-              {stats.currentStreak > 0 ? (
-                <Chip warm>{plural(stats.currentStreak, "day")} running</Chip>
-              ) : null}
-              <Chip>longest run: {plural(stats.longestStreak, "day")}</Chip>
-              <Chip>{plural(stats.daysWritten, "day")} written on</Chip>
-            </div>
-          </>
+          <p className="m-0 max-w-[62ch] font-serif text-[18px] text-ink-soft leading-relaxed">
+            {plural(stats.entries, "page")} across{" "}
+            {plural(stats.volumes, "volume")}, {formatCount(stats.words)} words
+            {stats.firstEntry ? (
+              <>, since {formatLongDate(stats.firstEntry)}</>
+            ) : null}
+            . <RunLine stats={stats} />
+          </p>
         )}
       </section>
 
@@ -62,17 +54,20 @@ function ShelfPage() {
         <>
           <Bookcase currentPeriodKey={currentPeriodKey} volumes={volumes} />
 
-          <div className="-mt-6 mb-11 flex flex-wrap gap-2.5">
+          <nav
+            aria-label="From the shelf"
+            className="-mt-6 mb-11 flex flex-wrap items-center gap-x-6 gap-y-2"
+          >
             <Button asChild variant="outline">
               <Link to="/write">Write today</Link>
             </Button>
-            <Button asChild variant="ghost">
-              <Link to="/atlas">A life in numbers</Link>
-            </Button>
-            <Button asChild variant="ghost">
-              <Link to="/on-this-day">On this day</Link>
-            </Button>
-          </div>
+            <Link className="nav-link" to="/atlas">
+              Read it back as a picture
+            </Link>
+            <Link className="nav-link" to="/on-this-day">
+              On this day
+            </Link>
+          </nav>
 
           <div className="grid items-start gap-11 md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
             <section>
@@ -109,24 +104,25 @@ function ShelfPage() {
   );
 }
 
-function Chip({
-  children,
-  warm = false,
-}: {
-  children: React.ReactNode;
-  warm?: boolean;
-}) {
-  return (
-    <span
-      className={
-        warm
-          ? "rounded-full border border-accent bg-paper-raised px-3 py-0.5 text-[12.5px] text-accent"
-          : "rounded-full border border-rule bg-paper-raised px-3 py-0.5 text-[12.5px] text-ink-soft"
-      }
-    >
-      {children}
-    </span>
-  );
+/** The streaks, said the way a person would say them. */
+function RunLine({ stats }: { stats: ShelfStats }) {
+  if (stats.daysWritten === 0) {
+    return null;
+  }
+  const running =
+    stats.currentStreak > 1
+      ? `${plural(stats.currentStreak, "day")} in a row and counting`
+      : null;
+  const longest =
+    stats.longestStreak > 1
+      ? `the longest run was ${plural(stats.longestStreak, "day")}`
+      : null;
+  const parts = [running, longest].filter((part) => part !== null);
+  if (parts.length === 0) {
+    return null;
+  }
+  const line = parts.join("; ");
+  return <>{line.charAt(0).toUpperCase() + line.slice(1)}.</>;
 }
 
 /** Signed out. No marketing, just the door. */

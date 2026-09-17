@@ -88,6 +88,7 @@ function VolumePage() {
       {naming ? (
         <CoverEditor
           color={volume.color}
+          entries={volume.entries}
           onDone={() => setNaming(false)}
           periodKey={volume.periodKey}
           subtitle={volume.subtitle}
