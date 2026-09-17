@@ -16,6 +16,24 @@ Built as a [Turborepo](https://turborepo.com) monorepo with Bun workspaces:
   journal collections, the shelf aggregation, and the period-key helpers the
   UI and server share. See its [README](packages/mongo/README.md).
 
+## What it looks like
+
+![The shelf by day](docs/media/01-shelf-day.jpg)
+
+![The shelf at night](docs/media/02-shelf-night.jpg)
+
+Every volume is bound the same way and stamped in foil; the cloth, the
+thickness and the height are what differ. Hover pulls a book toward you.
+
+![A book pulled out of the row](docs/media/07-hover-pull-out.png)
+
+![The cover editor with its live preview](docs/media/08-cover-editor-closeup.png)
+
+![The atlas, cut by day](docs/media/09-atlas-grid-closeup.png)
+
+More in [`docs/media`](docs/media), including a
+[36-second walkthrough](docs/media/10-walkthrough.webm).
+
 ## Develop
 
 ```bash
