@@ -4,7 +4,7 @@
 //
 //   MONGODB_URI=mongodb://127.0.0.1:27017/life-on-a-shelf bun run ensure-indexes
 import { withDb } from "../src/client.ts";
-import { ensureNoteIndexes } from "../src/notes.ts";
+import { ensureJournalIndexes } from "../src/journal.ts";
 
 const uri = process.env.MONGODB_URI;
 if (!uri) {
@@ -12,6 +12,6 @@ if (!uri) {
 }
 
 await withDb(uri, async (db) => {
-  await ensureNoteIndexes(db);
+  await ensureJournalIndexes(db);
   console.log(`Indexes ensured on ${db.databaseName}.`);
 });
