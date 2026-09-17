@@ -2,7 +2,7 @@
 // Creates the indexes the package's queries rely on. Run once per database
 // (locally after the first `bun run dev`, and against Atlas before deploying):
 //
-//   MONGODB_URI=mongodb://127.0.0.1:27017/boilerplate bun run ensure-indexes
+//   MONGODB_URI=mongodb://127.0.0.1:27017/life-on-a-shelf bun run ensure-indexes
 import { withDb } from "../src/client.ts";
 import { ensureNoteIndexes } from "../src/notes.ts";
 

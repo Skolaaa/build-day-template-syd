@@ -1,4 +1,4 @@
-# Boilerplate
+# Life On A Shelf
 
 A [TanStack Start](https://tanstack.com/start) app deployed on Cloudflare Workers, with [Hono](https://hono.dev) as the top-level `fetch` handler, [Clerk](https://clerk.com) for auth and [MongoDB](https://www.mongodb.com) for data.
 

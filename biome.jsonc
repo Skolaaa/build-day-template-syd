@@ -11,6 +11,12 @@
   // a JSX attribute. Linting them is pointless too - the findings could only ever be
   // resolved by editing vendored code.
   "files": {
-    "includes": ["!**/components/ui", "!**/hooks/use-mobile.ts"]
+    "includes": [
+      "!**/components/ui",
+      "!**/hooks/use-mobile.ts",
+      // Installed skill templates (skills-lock.json), not this repo's code.
+      "!.agents",
+      "!.claude/skills"
+    ]
   }
 }

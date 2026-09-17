@@ -43,12 +43,12 @@ The client options in `src/client.ts` follow from the same model: `maxPoolSize: 
 
 `bun run dev` in this package (or at the repo root, where turbo starts it alongside the web app) runs a real `mongod` through [mongodb-memory-server](https://github.com/typegoose/mongodb-memory-server). No Docker or system install is needed. The first run downloads the binary (MongoDB 7.0, about 100 MB) into `node_modules/.cache`; later runs start in well under a second. Data is written to `.mongo-data` at the repo root, which is gitignored, so notes survive restarts. Delete that folder to start clean.
 
-The default `MONGODB_URI` in `apps/web/.env.example` points at it: `mongodb://127.0.0.1:27017/boilerplate`.
+The default `MONGODB_URI` in `apps/web/.env.example` points at it: `mongodb://127.0.0.1:27017/life-on-a-shelf`.
 
 ```bash
 bun run dev              # start the local database (Ctrl+C stops it)
 bun test                 # runs against a throwaway in-memory instance
-MONGODB_URI=mongodb://127.0.0.1:27017/boilerplate bun run ensure-indexes
+MONGODB_URI=mongodb://127.0.0.1:27017/life-on-a-shelf bun run ensure-indexes
 ```
 
 ## Atlas

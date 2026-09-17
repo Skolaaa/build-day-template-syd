@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "boilerplate",
+      "name": "life-on-a-shelf",
       "devDependencies": {
         "@biomejs/biome": "2.5.6",
         "husky": "^9.1.7",

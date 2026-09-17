@@ -1,4 +1,4 @@
-# Boilerplate
+# Life On A Shelf
 
 A [Turborepo](https://turborepo.com) monorepo, managed with Bun workspaces.
 
