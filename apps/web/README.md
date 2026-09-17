@@ -51,8 +51,9 @@ The route returns 404 unless `DEV_LOGIN_EMAIL` is set, and that is the only thin
 
 Database access goes through the workspace package [`@repo/mongo`](../../packages/mongo) (see its README for the driver setup, the local database and the Workers-specific reasoning). In this app:
 
-- `src/server/notes.ts` holds the server functions. Each handler wraps its work in `withDb(env.MONGODB_URI, ...)`, with `env` from `cloudflare:workers`. That is the one place the connection string is read.
-- `src/routes/notes.tsx` is the example page: the loader calls `listNotesFn`, the form calls `createNoteFn` and invalidates the router. Its `errorComponent` renders a "could not reach MongoDB" panel, which is what you see when the local database is not running.
+- `src/server/journal.ts` holds the server functions. Each handler resolves the Clerk user with `auth()` and wraps its work in `withDb(env.MONGODB_URI, ...)`, with `env` from `cloudflare:workers`. That is the one place the connection string is read. Server-only helpers (`requireUserId`, `readerToday`, `mediaEnabled`) live in `src/server/context.ts` so nothing but `createServerFn` calls is exported from the module the client bundles.
+- Routes: `/` (the shelf), `/write`, `/entry/$date`, `/volume/$periodKey`, `/tag/$tag`, `/atlas`, `/on-this-day`, `/settings`. Every journal route has a `pendingComponent` and the shared `JournalError` panel in `src/components/journal/states.tsx`, which is what you see when the local database is not running.
+- Media: `POST/GET/DELETE /api/media` are Hono routes in `src/server.ts` that stream to the optional `MEDIA` R2 binding (see `wrangler.jsonc`). Keys are `users/<userId>/<entryId>/<uuid>.<ext>`; reads are refused outside the signed-in user's prefix.
 - Browser code imports only `@repo/mongo/shared`. The package root imports the driver and belongs in server functions (or Hono routes: `withDb(c.env.MONGODB_URI, ...)` works there too).
 
 `MONGODB_URI` names the database in its path. The default in `.env.example` points at the local server that `bun run dev` starts; for Atlas, paste the cluster's `mongodb+srv://` string instead.

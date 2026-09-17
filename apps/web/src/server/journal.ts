@@ -34,51 +34,14 @@ import {
   isVolumePeriod,
   type VolumeMetaInput,
 } from "@repo/mongo/shared";
-import { redirect } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-import { getRequestHeader } from "@tanstack/react-start/server";
+import { mediaEnabled, readerToday, requireUserId } from "./context";
 
 const RECENT_ON_SHELF = 6;
 const TAGS_ON_SHELF = 24;
 const SEARCH_LIMIT = 20;
 
 // ---------------------------------------------------------------- helpers
-
-async function requireUserId(): Promise<string> {
-  const { userId } = await auth();
-  if (!userId) {
-    throw redirect({ to: "/login" });
-  }
-  return userId;
-}
-
-const TZ_COOKIE = /(?:^|;\s*)tz=([^;]+)/;
-
-/**
- * Today as the reader sees it. The root shell writes the browser's timezone
- * into a `tz` cookie on first load; until then (or if it is nonsense) the
- * Worker's UTC clock stands in, which is at worst a few hours out.
- */
-export function readerToday(): string {
-  const cookie = getRequestHeader("cookie") ?? "";
-  const timeZone = decodeURIComponent(TZ_COOKIE.exec(cookie)?.[1] ?? "UTC");
-  try {
-    // en-CA is the one common locale whose numeric date is already ISO shaped.
-    return new Intl.DateTimeFormat("en-CA", {
-      day: "2-digit",
-      month: "2-digit",
-      timeZone,
-      year: "numeric",
-    }).format(new Date());
-  } catch {
-    return new Date().toISOString().slice(0, 10);
-  }
-}
-
-/** True when the R2 bucket is bound. Without it the journal is text-only. */
-export function mediaEnabled(): boolean {
-  return typeof env.MEDIA !== "undefined";
-}
 
 function asObject(input: unknown): Record<string, unknown> {
   if (input === null || typeof input !== "object") {

@@ -95,7 +95,13 @@ function MonthGrid({
   ];
 
   return (
-    <div className="grid grid-cols-7 gap-1">
+    <div
+      className={
+        showNumbers
+          ? "grid max-w-[420px] grid-cols-7 gap-1"
+          : "grid grid-cols-7 gap-1"
+      }
+    >
       {WEEKDAYS.map((label, i) => (
         <span
           aria-hidden="true"

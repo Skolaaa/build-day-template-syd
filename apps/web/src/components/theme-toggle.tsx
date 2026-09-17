@@ -57,7 +57,6 @@ export function applyThemeMode(mode: ThemeMode) {
   }
 
   document.documentElement.style.colorScheme = resolved;
-  window.localStorage.setItem("theme", mode);
 }
 
 /** The saved mode, kept in sync with the toggle and the OS. */
@@ -91,9 +90,12 @@ export function useThemeMode(): [ThemeMode, (mode: ThemeMode) => void] {
     };
   }, [mode]);
 
+  // Only a deliberate choice is saved; applying the saved mode on mount must
+  // never write it back, or a stale read would overwrite the preference.
   const change = (next: ThemeMode) => {
     setMode(next);
     applyThemeMode(next);
+    window.localStorage.setItem("theme", next);
   };
 
   return [mode, change];

@@ -136,9 +136,7 @@ function AtlasPage() {
           <Bars
             data={volumes}
             describe={(v) => `${formatCount(v)} words`}
-            interval={
-              volumes.length > 14 ? Math.ceil(volumes.length / 14) - 1 : 0
-            }
+            interval="preserveStartEnd"
           />
         </VizCard>
 

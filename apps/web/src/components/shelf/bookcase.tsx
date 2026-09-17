@@ -1,17 +1,31 @@
-import type { Volume } from "@repo/mongo/shared";
+import { spineThickness, type Volume } from "@repo/mongo/shared";
 import { useNavigate } from "@tanstack/react-router";
 import { type KeyboardEvent, useCallback } from "react";
 import { Spine, UnopenedSpine } from "./spine";
 
-const PER_SHELF = 9;
+/** Room for books on one board, in px: the page width less the board's padding. */
+const SHELF_WIDTH = 1000;
+const MINI_SHELF_WIDTH = 560;
+const BOOK_GAP = 3;
 const MIN_BOOKS_BEFORE_SPACE = 3;
 
-function intoShelves<T>(items: T[], size: number): T[][] {
-  const shelves: T[][] = [];
-  for (let i = 0; i < items.length; i += size) {
-    shelves.push(items.slice(i, i + size));
+/** Books go on a shelf until it is full, then the next one. Thick books take more room. */
+function intoShelves(volumes: Volume[], width: number): Volume[][] {
+  const shelves: Volume[][] = [];
+  let row: Volume[] = [];
+  let used = 0;
+  for (const volume of volumes) {
+    const thickness = spineThickness(volume.entries) + BOOK_GAP;
+    if (row.length > 0 && used + thickness > width) {
+      shelves.push(row);
+      row = [];
+      used = 0;
+    }
+    row.push(volume);
+    used += thickness;
   }
-  return shelves.length > 0 ? shelves : [[]];
+  shelves.push(row);
+  return shelves;
 }
 
 interface BookcaseProps {
@@ -28,7 +42,7 @@ export function Bookcase({
 }: BookcaseProps) {
   const navigate = useNavigate();
   const unopened = !volumes.some((v) => v.periodKey === currentPeriodKey);
-  const shelves = intoShelves(volumes, PER_SHELF);
+  const shelves = intoShelves(volumes, mini ? MINI_SHELF_WIDTH : SHELF_WIDTH);
 
   // Left and right walk along the shelf, wrapping at the ends, so the whole
   // bookcase reads as one row of books rather than a list of buttons.

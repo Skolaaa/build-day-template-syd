@@ -65,8 +65,8 @@ interface BarsProps {
   data: Datum[];
   /** How to say a value in the tooltip: "1,204 words". */
   describe: (value: number) => string;
-  /** Show only every n-th x label, for dense axes. */
-  interval?: number;
+  /** Which x labels to show; dense axes thin themselves out. */
+  interval?: number | "preserveStartEnd";
 }
 
 export function Bars({ data, describe, interval = 0 }: BarsProps) {
@@ -79,6 +79,7 @@ export function Bars({ data, describe, interval = 0 }: BarsProps) {
             axisLine={{ stroke: "var(--rule-strong)" }}
             dataKey="label"
             interval={interval}
+            minTickGap={18}
             tick={{ fill: "var(--ink-faint)", fontSize: 11 }}
             tickLine={false}
           />
@@ -94,7 +95,12 @@ export function Bars({ data, describe, interval = 0 }: BarsProps) {
             formatter={(value) => [describe(Number(value)), ""]}
             separator=""
           />
-          <Bar dataKey="value" fill="var(--viz-mark)" radius={[3, 3, 0, 0]} />
+          <Bar
+            dataKey="value"
+            fill="var(--viz-mark)"
+            isAnimationActive={false}
+            radius={[3, 3, 0, 0]}
+          />
         </BarChart>
       </ResponsiveContainer>
     </Frame>
@@ -139,6 +145,7 @@ export function MoodLine({ data, describe }: MoodLineProps) {
             connectNulls
             dataKey="value"
             dot={{ fill: "var(--viz-mark)", r: 2.5, strokeWidth: 0 }}
+            isAnimationActive={false}
             stroke="var(--viz-mark)"
             strokeWidth={1.5}
             type="monotone"
