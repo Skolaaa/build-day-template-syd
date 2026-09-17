@@ -1,13 +1,39 @@
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300..700&family=Newsreader:opsz,wght@6..72,300..600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300..700&family=Newsreader:ital,opsz,wght@0,6..72,300..600;1,6..72,300..600&display=swap");
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
 
+/* ------------------------------------------------------------------ theme
+   Tailwind reads these, so `bg-paper`, `text-ink`, `border-rule`,
+   `bg-wood-top` and the shadcn roles all work as utilities. The values
+   themselves live on :root / .dark below. */
 @theme inline {
   --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-heading: "Newsreader", ui-serif, Georgia, serif;
+  --font-serif:
+    "Newsreader", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia,
+    serif;
+  --font-heading: var(--font-serif);
+
+  --color-paper: var(--paper);
+  --color-paper-raised: var(--paper-raised);
+  --color-paper-sunk: var(--paper-sunk);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-faint: var(--ink-faint);
+  --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-wood-top: var(--wood-top);
+  --color-wood-bottom: var(--wood-bottom);
+  --color-grid-empty: var(--grid-empty);
+  --color-mood-1: var(--mood-1);
+  --color-mood-2: var(--mood-2);
+  --color-mood-3: var(--mood-3);
+  --color-mood-4: var(--mood-4);
+  --color-mood-5: var(--mood-5);
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -21,8 +47,8 @@
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
+  --color-accent-ui: var(--accent-ui);
+  --color-accent-ui-foreground: var(--accent-ui-foreground);
   --color-destructive: var(--destructive);
   --color-border: var(--border);
   --color-input: var(--input);
@@ -50,95 +76,152 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* Brand core from docs/image.png - constant across themes. One accent only:
-   terracotta. Everything else is warm paper and ink. */
-:root {
-  --brand-terracotta: oklch(0.6724 0.1308 38.76); /* #d97757 */
-  --brand-paper: oklch(0.9818 0.0054 95.1); /* #faf9f5 */
-  --brand-ink: oklch(0.209 0 0); /* #181818 */
-
-  --radius: 0.75rem;
-}
-
-/* Light is the reference surface: ink on warm paper, hairline dividers, and
-   terracotta for fills and labels. */
+/* Day: aged paper, real ink, a warm oxblood for anything that wants pointing
+   at. Books have small radii; nothing here is a pill. */
 :root,
 .light {
-  --background: var(--brand-paper);
-  --foreground: var(--brand-ink);
-  --card: oklch(1 0 0);
-  --card-foreground: var(--brand-ink);
-  --popover: oklch(1 0 0);
-  --popover-foreground: var(--brand-ink);
-  --primary: var(--brand-terracotta);
-  --primary-foreground: var(
-    --brand-ink
-  ); /* white on terracotta is only 3.1:1 */
-  --secondary: oklch(0.9457 0.0096 93.57); /* #efede6 */
-  --secondary-foreground: var(--brand-ink);
-  --muted: oklch(0.9457 0.0096 93.57);
-  --muted-foreground: oklch(
-    0.5181 0.01 84.59
-  ); /* #6b6862, image's #8a8681 fails AA */
-  --accent: oklch(0.9457 0.0096 93.57);
-  --accent-foreground: var(--brand-ink);
-  --destructive: oklch(0.5289 0.1661 28.5); /* #b8382e */
-  --border: oklch(0.9088 0.0123 96.43); /* #e3e1d8 divider */
-  --input: oklch(0.9088 0.0123 96.43);
-  --ring: var(--brand-terracotta);
-  --chart-1: var(--brand-terracotta);
-  --chart-2: var(--brand-ink);
-  --chart-3: oklch(0.3791 0 0); /* #424242 */
-  --chart-4: oklch(0.622 0.0088 73.7); /* #8a8681 */
-  --chart-5: oklch(0.9088 0.0123 96.43);
-  --sidebar: var(--brand-paper);
-  --sidebar-foreground: var(--brand-ink);
-  --sidebar-primary: var(--brand-terracotta);
-  --sidebar-primary-foreground: var(--brand-ink);
-  --sidebar-accent: oklch(0.9457 0.0096 93.57);
-  --sidebar-accent-foreground: var(--brand-ink);
-  --sidebar-border: oklch(0.9088 0.0123 96.43);
-  --sidebar-ring: var(--brand-terracotta);
+  --paper: #f4efe4;
+  --paper-raised: #fdfaf3;
+  --paper-sunk: #ebe4d6;
+  --ink: #2b2520;
+  --ink-soft: #6d6155;
+  --ink-faint: #8a7d6e; /* #97897a from the old set fails AA on paper */
+  --rule: #e2d9c8;
+  --rule-strong: #cfc3ad;
+  --accent: #8a4433;
+  --accent-soft: #b2725c;
+  --wood-top: #7a5335;
+  --wood-bottom: #4b3220;
+  --grid-empty: #e4dccc;
+  --bay: #34483f;
+  --bay-ink: rgba(251, 247, 238, 0.72);
+  --shadow: rgba(70, 52, 34, 0.28);
 
-  /* Terracotta text needs a darker step to pass AA on paper. */
-  --brand-label: oklch(0.5585 0.1322 38.91); /* #b35434 */
+  /* Moods, 1 (rough) to 5 (bright): a cool-warm walk, never a traffic light. */
+  --mood-1: #8c5a5a;
+  --mood-2: #8c7358;
+  --mood-3: #7f8375;
+  --mood-4: #5f8570;
+  --mood-5: #4f8497;
+
+  /* Chart roles. Five bands with monotone lightness; diverging poles are
+     warm/cool for colour-vision safety. */
+  --viz-mark: #a8553c;
+  --viz-up: #a4771c;
+  --viz-down: #4486bb;
+  --viz-band-0: #e9e1d2;
+  --viz-band-1: #d38972;
+  --viz-band-2: #c27157;
+  --viz-band-3: #ae5a40;
+  --viz-band-4: #96452b;
+  --viz-band-5: #793620;
+
+  --radius: 0.375rem;
+
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --card: var(--paper-raised);
+  --card-foreground: var(--ink);
+  --popover: var(--paper-raised);
+  --popover-foreground: var(--ink);
+  --primary: var(--accent);
+  --primary-foreground: var(--paper-raised);
+  --secondary: var(--paper-sunk);
+  --secondary-foreground: var(--ink);
+  --muted: var(--paper-sunk);
+  --muted-foreground: var(--ink-soft);
+  --accent-ui: var(--paper-sunk);
+  --accent-ui-foreground: var(--ink);
+  --destructive: #a13a2a;
+  --border: var(--rule);
+  --input: var(--rule-strong);
+  --ring: var(--accent);
+  --chart-1: var(--viz-mark);
+  --chart-2: var(--viz-down);
+  --chart-3: var(--viz-up);
+  --chart-4: var(--ink-soft);
+  --chart-5: var(--rule-strong);
+  --sidebar: var(--paper);
+  --sidebar-foreground: var(--ink);
+  --sidebar-primary: var(--accent);
+  --sidebar-primary-foreground: var(--paper-raised);
+  --sidebar-accent: var(--paper-sunk);
+  --sidebar-accent-foreground: var(--ink);
+  --sidebar-border: var(--rule);
+  --sidebar-ring: var(--accent);
+
+  color-scheme: light;
 }
 
-/* Dark variant: the same hues with paper and ink swapped. */
+/* Night: lamplight on the same shelf. Its own ramp, not an inversion: the
+   paper goes to a warm brown-black, the wood darkens, the accent lifts. */
 .dark {
-  --background: var(--brand-ink);
-  --foreground: var(--brand-paper);
-  --card: oklch(0.2485 0.0024 67.72); /* #222120 */
-  --card-foreground: var(--brand-paper);
-  --popover: oklch(0.2485 0.0024 67.72);
-  --popover-foreground: var(--brand-paper);
-  --primary: var(--brand-terracotta);
-  --primary-foreground: var(--brand-ink);
-  --secondary: oklch(0.2894 0.0039 84.58); /* #2c2b29 */
-  --secondary-foreground: var(--brand-paper);
-  --muted: oklch(0.2894 0.0039 84.58);
-  --muted-foreground: oklch(0.6973 0.0111 81.79); /* #a19d96 */
-  --accent: oklch(0.2894 0.0039 84.58);
-  --accent-foreground: var(--brand-paper);
-  --destructive: oklch(0.6683 0.1574 28.93); /* #e5695a */
-  --border: oklch(0.3417 0.0059 78.25); /* #3a3835 */
-  --input: oklch(0.3417 0.0059 78.25);
-  --ring: var(--brand-terracotta);
-  --chart-1: var(--brand-terracotta);
-  --chart-2: var(--brand-paper);
-  --chart-3: oklch(0.6973 0.0111 81.79);
-  --chart-4: oklch(0.5181 0.01 84.59);
-  --chart-5: oklch(0.3417 0.0059 78.25);
-  --sidebar: var(--brand-ink);
-  --sidebar-foreground: var(--brand-paper);
-  --sidebar-primary: var(--brand-terracotta);
-  --sidebar-primary-foreground: var(--brand-ink);
-  --sidebar-accent: oklch(0.2894 0.0039 84.58);
-  --sidebar-accent-foreground: var(--brand-paper);
-  --sidebar-border: oklch(0.3417 0.0059 78.25);
-  --sidebar-ring: var(--brand-terracotta);
+  --paper: #15120f;
+  --paper-raised: #1e1a16;
+  --paper-sunk: #100e0c;
+  --ink: #ece3d5;
+  --ink-soft: #a29584;
+  --ink-faint: #8a7d6e;
+  --rule: #322b23;
+  --rule-strong: #453b30;
+  --accent: #d08a6c;
+  --accent-soft: #b3735a;
+  --wood-top: #3d2a1b;
+  --wood-bottom: #241811;
+  --grid-empty: #262019;
+  --bay: #15201c;
+  --bay-ink: rgba(251, 247, 238, 0.55);
+  --shadow: rgba(0, 0, 0, 0.6);
 
-  --brand-label: oklch(0.7187 0.1122 39.57); /* #e08b6e */
+  --mood-1: #a86f6f;
+  --mood-2: #a88a6a;
+  --mood-3: #93978a;
+  --mood-4: #6f9a83;
+  --mood-5: #6499ad;
+
+  --viz-mark: #c5735a;
+  --viz-up: #b78934;
+  --viz-down: #5798ce;
+  --viz-band-0: #2a241d;
+  --viz-band-1: #7b3d2a;
+  --viz-band-2: #954c35;
+  --viz-band-3: #ae5d44;
+  --viz-band-4: #c27259;
+  --viz-band-5: #d28973;
+
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --card: var(--paper-raised);
+  --card-foreground: var(--ink);
+  --popover: var(--paper-raised);
+  --popover-foreground: var(--ink);
+  --primary: var(--accent);
+  --primary-foreground: var(--paper);
+  --secondary: var(--paper-raised);
+  --secondary-foreground: var(--ink);
+  --muted: var(--paper-raised);
+  --muted-foreground: var(--ink-soft);
+  --accent-ui: var(--paper-raised);
+  --accent-ui-foreground: var(--ink);
+  --destructive: #e07a68;
+  --border: var(--rule);
+  --input: var(--rule-strong);
+  --ring: var(--accent);
+  --chart-1: var(--viz-mark);
+  --chart-2: var(--viz-down);
+  --chart-3: var(--viz-up);
+  --chart-4: var(--ink-soft);
+  --chart-5: var(--rule-strong);
+  --sidebar: var(--paper);
+  --sidebar-foreground: var(--ink);
+  --sidebar-primary: var(--accent);
+  --sidebar-primary-foreground: var(--paper);
+  --sidebar-accent: var(--paper-raised);
+  --sidebar-accent-foreground: var(--ink);
+  --sidebar-border: var(--rule);
+  --sidebar-ring: var(--accent);
+
+  color-scheme: dark;
 }
 
 @layer base {
@@ -146,66 +229,96 @@
     @apply border-border outline-ring/50;
   }
 
+  html {
+    @apply font-sans;
+    -webkit-text-size-adjust: 100%;
+  }
+
   body {
+    min-height: 100dvh;
+    margin: 0;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     @apply bg-background text-foreground;
   }
 
-  html {
-    @apply font-sans;
+  /* Anything a person wrote or named is set in serif. */
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-serif);
+    font-weight: 400;
   }
 
-  /* shadcn's base layer does not style inline code, and the Quick Start list
-     on the home page renders it. Layered so Tailwind utilities still win. */
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+
   code {
-    @apply rounded-md border border-border bg-muted px-1.5 py-0.5 font-mono text-[0.82em] text-foreground;
+    @apply rounded-sm bg-paper-sunk px-1.5 py-0.5 font-mono text-[0.85em] text-ink;
+  }
+
+  kbd {
+    padding: 1px 5px;
+    font-family: var(--font-sans);
+    font-size: 11px;
+    color: var(--ink-faint);
+    border: 1px solid var(--rule-strong);
+    border-bottom-width: 2px;
+    border-radius: 3px;
   }
 }
 
-body {
-  min-height: 100dvh;
-}
-
-body {
-  margin: 0;
-  overflow-x: hidden;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+/* ------------------------------------------------------------- utilities */
 
 .page-wrap {
   width: min(1080px, calc(100% - 2rem));
   margin-inline: auto;
 }
 
-/* Serif display heading, sentence case, slightly tightened like the image. */
 .display-title {
-  font-family: var(--font-heading);
+  font-family: var(--font-serif);
   font-weight: 400;
-  letter-spacing: -0.02em;
+  line-height: 1.1;
+  letter-spacing: -0.012em;
 }
 
-/* Soft panel: rounded, hairline border, no shadow. */
-.island-shell {
-  position: relative;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-2xl);
+/* Small uppercase label above a heading, sans, faint. */
+.kicker {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
 }
 
-/* Eyebrow label: small terracotta text above a heading. */
-.island-kicker {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--brand-label);
+/* Section heading: serif, spaced caps, a hairline under it. */
+.section-heading {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  justify-content: space-between;
+  padding-bottom: 8px;
+  margin: 0 0 12px;
+  font-family: var(--font-serif);
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border-bottom: 1px solid var(--rule);
 }
 
 .nav-link {
   position: relative;
   display: inline-flex;
+  gap: 6px;
   align-items: center;
   font-size: 0.9rem;
   font-weight: 500;
-  color: var(--muted-foreground);
+  color: var(--ink-soft);
   text-decoration: none;
   transition: color 200ms ease;
 }
@@ -217,7 +330,7 @@ body {
   width: 100%;
   height: 1px;
   content: "";
-  background: var(--brand-terracotta);
+  background: var(--accent);
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 170ms ease;
@@ -225,7 +338,7 @@ body {
 
 .nav-link:hover,
 .nav-link.is-active {
-  color: var(--foreground);
+  color: var(--ink);
 }
 
 .nav-link:hover::after,
@@ -233,15 +346,1193 @@ body {
   transform: scaleX(1);
 }
 
-@media (max-width: 640px) {
-  .nav-link::after {
-    bottom: -4px;
-  }
+/* Faint paper grain over the whole page. Multiply keeps it out of the way
+   in both day and night. */
+.paper-grain::before {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  content: "";
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: multiply;
+  opacity: 0.05;
 }
 
-.site-footer {
-  border-top: 1px solid var(--border);
+.dark .paper-grain::before {
+  mix-blend-mode: screen;
+  opacity: 0.08;
 }
+
+/* A sheet of raised paper with a soft shadow under it: the page you read on. */
+.page-sheet {
+  padding: clamp(28px, 5vw, 56px);
+  background: var(--paper-raised);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  box-shadow: 0 20px 44px -34px var(--shadow);
+}
+
+/* Panel: the same raised paper, tighter, for controls and charts. */
+.panel {
+  background: var(--paper-raised);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+}
+
+/* ---------------------------------------------------------------- shelf */
+
+/* Materials. The grain is procedural: an SVG turbulence stretched along one
+   axis and mapped to alpha, so the streaks run with the wood and the same
+   gradient underneath carries the colour in day and night. */
+:root {
+  --grain-board: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='64'%3E%3Cfilter id='g' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.011 0.32' numOctaves='3' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.08 0 0 0 0 0.04 0 0 0 0 0.02 1.1 0 0 0 -0.35'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  --grain-upright: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='420'%3E%3Cfilter id='g' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.32 0.011' numOctaves='3' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.08 0 0 0 0 0.04 0 0 0 0 0.02 1.1 0 0 0 -0.35'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  --grain-cloth: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0.5 0 0 0 -0.1'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+}
+
+/* The case. Two uprights, a top board, and a bay per
+   shelf whose back is painted a deep green. The board above each bay
+   throws a shadow onto the books below, and the bay darkens toward the
+   uprights, which is most of what makes it read as a piece of furniture
+   rather than planks floating on paper. */
+.bookcase {
+  padding: 4px 0 12px;
+  margin: 8px 0 40px;
+  overflow-x: auto;
+}
+
+.bookcase-case {
+  position: relative;
+  min-width: min-content;
+  padding: 0 14px;
+  filter: drop-shadow(0 26px 30px rgba(40, 26, 12, 0.35));
+}
+
+.bookcase-upright {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 3;
+  width: 14px;
+  background:
+    var(--grain-upright),
+    linear-gradient(90deg, var(--wood-top), var(--wood-bottom));
+  box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.14);
+}
+
+.bookcase-upright.is-left {
+  left: 0;
+  border-radius: 3px 0 0 3px;
+}
+
+.bookcase-upright.is-right {
+  right: 0;
+  background:
+    var(--grain-upright),
+    linear-gradient(270deg, var(--wood-top), var(--wood-bottom));
+  border-radius: 0 3px 3px 0;
+}
+
+.shelf {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: min-content;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.55) 0, transparent 46px), var(--bay);
+  box-shadow:
+    inset 28px 0 34px -26px rgba(0, 0, 0, 0.75),
+    inset -28px 0 34px -26px rgba(0, 0, 0, 0.75);
+}
+
+.shelf-books {
+  display: flex;
+  gap: 3px;
+  align-items: flex-end;
+  min-height: 298px;
+  padding: 26px 22px 0;
+  perspective: 900px;
+  perspective-origin: 50% 30%;
+}
+
+.shelf-space {
+  width: 120px;
+}
+
+/* Light. A wash of daylight from the upper left by day, a warm lamp out of
+   frame at night, laid over the books so they take the colour of it. Lower
+   shelves get less of it. */
+.shelf-glow {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 90% 90% at 8% -20%,
+    rgba(255, 249, 232, 0.3),
+    transparent 62%
+  );
+  mix-blend-mode: screen;
+}
+
+.dark .shelf-glow {
+  background: radial-gradient(
+    ellipse 64% 130% at 86% -14%,
+    rgba(255, 196, 118, 0.62),
+    rgba(255, 190, 110, 0.14) 46%,
+    transparent 72%
+  );
+}
+
+.shelf + .shelf .shelf-glow {
+  opacity: 0.55;
+}
+
+.shelf + .shelf + .shelf .shelf-glow {
+  opacity: 0.32;
+}
+
+/* The board: a wooden plank with grain, a lit top edge, a darker front lip,
+   and a real shadow thrown onto the bay below it. */
+.shelf-board {
+  position: relative;
+  z-index: 3;
+  height: 16px;
+  background:
+    var(--grain-board),
+    linear-gradient(180deg, var(--wood-top), var(--wood-bottom));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -3px 0 rgba(0, 0, 0, 0.26),
+    0 14px 22px -10px rgba(0, 0, 0, 0.7);
+}
+
+.shelf-board.is-top {
+  height: 12px;
+  border-radius: 3px 3px 0 0;
+}
+
+/* ---- the books ---- */
+
+.spine {
+  position: relative;
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  width: var(--spine-width);
+  height: var(--spine-height);
+  padding-block: 15px 11px;
+  padding-inline: 4px;
+  color: var(--spine-ink, #fbf7ee);
+  cursor: pointer;
+  background:
+/* the round of the back: thick books curve more */
+    linear-gradient(
+      90deg,
+      rgba(255, 255, 255, calc(0.2 + var(--spine-round, 0) * 0.16)) 0%,
+      rgba(255, 255, 255, 0.05) calc(14% + var(--spine-round, 0) * 10%),
+      rgba(0, 0, 0, 0) 58%,
+      rgba(0, 0, 0, calc(0.3 + var(--spine-round, 0) * 0.18)) 100%
+    ),
+    var(--spine-color);
+  border: 0;
+  border-radius: 2px 4px 4px 2px;
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.22),
+    inset 0 2px 0 rgba(255, 255, 255, 0.08),
+    4px 0 7px -3px rgba(0, 0, 0, 0.5),
+    0 12px 18px -14px rgba(0, 0, 0, 0.9);
+  filter: saturate(calc(1 - var(--spine-age, 0) * 0.28));
+  transform: translateY(var(--spine-lift, 0)) rotate(var(--spine-lean, 0deg))
+    rotateX(var(--spine-tip, 0deg));
+  transform-origin: bottom left;
+  transition:
+    transform 0.28s cubic-bezier(0.2, 0.8, 0.3, 1),
+    box-shadow 0.28s;
+}
+
+/* Cloth: a fine diagonal weave with a little tooth to it. */
+.spine::before {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  content: "";
+  background:
+    var(--grain-cloth),
+    repeating-linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.05) 0 1px,
+      transparent 1px 3px
+    );
+  border-radius: inherit;
+  opacity: 0.4;
+}
+
+/* Wear: the years bleach the head of the spine and soften its corners. */
+.spine::after {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  content: "";
+  background:
+    linear-gradient(
+      180deg,
+      rgba(244, 239, 228, calc(var(--spine-age, 0) * 0.26)),
+      transparent 42%
+    ),
+    radial-gradient(
+      circle at 0 0,
+      rgba(244, 239, 228, calc(var(--spine-age, 0) * 0.3)),
+      transparent 12px
+    ),
+    radial-gradient(
+      circle at 100% 0,
+      rgba(244, 239, 228, calc(var(--spine-age, 0) * 0.3)),
+      transparent 12px
+    );
+  border-radius: inherit;
+}
+
+/* The head of the text block, seen from a little above the shelf. */
+.spine-pages {
+  position: absolute;
+  top: -6px;
+  right: 1px;
+  left: 1px;
+  height: 6px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.35), transparent 40%),
+    repeating-linear-gradient(90deg, #efe6d0 0 1px, #d6c9ab 1px 2px);
+  border-radius: 1px 1px 0 0;
+  box-shadow:
+    inset 0 -1px 0 rgba(0, 0, 0, 0.22),
+    0 -1px 0 rgba(0, 0, 0, 0.12);
+}
+
+/* Hover pulls the book toward you: it lifts and tips out at the top, like
+   a finger hooked over the head of the spine. */
+.spine:hover,
+.spine:focus-visible {
+  --spine-lift: -14px;
+  --spine-tip: -9deg;
+  z-index: 1;
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.22),
+    inset 0 2px 0 rgba(255, 255, 255, 0.08),
+    6px 0 10px -3px rgba(0, 0, 0, 0.5),
+    0 26px 28px -16px rgba(0, 0, 0, 0.8);
+}
+
+.spine:focus-visible {
+  outline: 2px solid #fbf7ee;
+  outline-offset: 3px;
+}
+
+/* A leaning book rests its top on the neighbour, so it lifts less. */
+.spine[data-leaning="true"]:hover,
+.spine[data-leaning="true"]:focus-visible {
+  --spine-lift: -8px;
+  --spine-tip: -5deg;
+}
+
+.spine-title {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: var(--font-serif);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+
+.spine-title[data-plain] {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.14em;
+  opacity: 0.94;
+}
+
+.spine-title[data-long] {
+  font-size: 13px;
+  letter-spacing: 0.04em;
+}
+
+.spine-year {
+  flex: 0 0 auto;
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.08em;
+  opacity: 0.8;
+}
+
+.spine-flat .spine-year {
+  writing-mode: horizontal-tb;
+}
+
+/* ----- the binding. One binding for every book, the way a set is bound:
+   a pair of raised bands at the head and a pair at the tail, catching the
+   light along their top edge. Variety comes from the cloth colour, the
+   thickness and the height, never from the tooling. The bands are laid
+   out in the same flex column as the title, so nothing can ever sit on top
+   of the lettering. Sizes are logical so the same rule dresses a book
+   lying on its side (see .spine-flat). ----- */
+
+.spine-band {
+  flex: 0 0 auto;
+  inline-size: calc(100% + 8px);
+  block-size: 3px;
+  background: rgba(0, 0, 0, 0.28);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.16),
+    0 7px 0 rgba(0, 0, 0, 0.28),
+    0 8px 0 rgba(255, 255, 255, 0.16);
+}
+
+.spine-band:not(:first-of-type) {
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.16),
+    0 -7px 0 rgba(0, 0, 0, 0.28),
+    0 -6px 0 rgba(255, 255, 255, 0.16);
+}
+
+/* ----- a book lying on its side. Flipping the writing mode turns the
+   column of bands and title through ninety degrees; only the physical
+   bits (the light, the corners, the shadows) need saying again. ----- */
+.spine-flat {
+  width: var(--spine-height);
+  height: var(--spine-width);
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.24) 0%,
+      rgba(255, 255, 255, 0.04) 12%,
+      rgba(0, 0, 0, 0) 62%,
+      rgba(0, 0, 0, 0.34) 100%
+    ),
+    var(--spine-color);
+  border-radius: 2px 2px 4px 4px;
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.22),
+    0 3px 5px -2px rgba(0, 0, 0, 0.6);
+  writing-mode: vertical-lr;
+  transform: translateX(var(--spine-pull, 0));
+}
+
+.spine-flat:hover,
+.spine-flat:focus-visible {
+  --spine-pull: 12px;
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.22),
+    0 6px 10px -4px rgba(0, 0, 0, 0.6);
+}
+
+.spine-flat .spine-pages {
+  display: none;
+}
+
+.spine-flat .spine-band {
+  box-shadow:
+    1px 0 0 rgba(255, 255, 255, 0.16),
+    7px 0 0 rgba(0, 0, 0, 0.28),
+    8px 0 0 rgba(255, 255, 255, 0.16);
+}
+
+.spine-flat .spine-band:not(:first-of-type) {
+  box-shadow:
+    1px 0 0 rgba(255, 255, 255, 0.16),
+    -7px 0 0 rgba(0, 0, 0, 0.28),
+    -6px 0 0 rgba(255, 255, 255, 0.16);
+}
+
+.book-pile {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column-reverse;
+  align-items: flex-start;
+  margin-left: 12px;
+}
+
+/* The volume you are living in, before you have written a word of it. */
+.spine-unopened {
+  width: 44px;
+  color: var(--bay-ink);
+  background: none;
+  border: 1px dashed var(--bay-ink);
+  box-shadow: none;
+  filter: none;
+}
+
+.spine-unopened::before,
+.spine-unopened::after,
+.spine-unopened .spine-pages {
+  display: none;
+}
+
+.spine-unopened:hover,
+.spine-unopened:focus-visible {
+  color: var(--accent);
+  border-color: var(--accent);
+  box-shadow: none;
+}
+
+/* ---- the props ---- */
+
+.bookend {
+  flex: 0 0 auto;
+  width: 30px;
+  height: 78px;
+  margin-left: 6px;
+  filter: drop-shadow(3px 4px 4px rgba(0, 0, 0, 0.45));
+}
+
+/* A single spine shown on its own, for the cover editor's preview. */
+.spine-preview {
+  display: flex;
+  flex-direction: column;
+  width: max-content;
+  min-width: 132px;
+  border-radius: 3px 3px 0 0;
+}
+
+.spine-preview-books {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 18px 18px 0;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.45) 0, transparent 40px), var(--bay);
+  border-radius: 3px 3px 0 0;
+}
+
+.spine-preview .spine {
+  cursor: default;
+  transition: none;
+}
+
+.spine-preview .spine:hover {
+  --spine-lift: 0;
+  --spine-tip: 0deg;
+}
+
+.spine-preview .shelf-board {
+  height: 10px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -3px 0 rgba(0, 0, 0, 0.22);
+}
+
+/* A miniature of the shelf, for the settings preview. */
+.shelf-mini {
+  margin: 4px 0 8px;
+}
+
+.shelf-mini .bookcase-case {
+  padding: 0 8px;
+  filter: none;
+}
+
+.shelf-mini .bookcase-upright {
+  width: 8px;
+}
+
+.shelf-mini .shelf-books {
+  gap: 2px;
+  min-height: 124px;
+  padding: 10px 10px 0;
+}
+
+.shelf-mini .shelf-board {
+  height: 8px;
+}
+
+.shelf-mini .shelf-board.is-top {
+  height: 6px;
+}
+
+.shelf-mini .spine {
+  gap: 4px;
+  width: calc(var(--spine-width) * 0.6);
+  height: calc(var(--spine-height) * 0.4);
+  padding-block: 5px 4px;
+  padding-inline: 2px;
+  border-radius: 1px 2px 2px 1px;
+}
+
+.shelf-mini .spine-pages {
+  top: -3px;
+  height: 3px;
+}
+
+.shelf-mini .spine-year {
+  font-size: 7px;
+  letter-spacing: 0.04em;
+}
+
+.shelf-mini .spine-band {
+  block-size: 2px;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.28);
+}
+
+.shelf-mini .spine-band:not(:first-of-type) {
+  box-shadow: 0 -4px 0 rgba(0, 0, 0, 0.28);
+}
+
+.shelf-mini .spine:hover,
+.shelf-mini .spine:focus-visible {
+  --spine-lift: -4px;
+  --spine-tip: -4deg;
+}
+
+/* Gold foil: the lettering takes a gradient so it catches the light the
+   way stamped gilt does. Pale gold on dark cloth, old gold on pale cloth;
+   a cloth that can take neither keeps plain bold ink. */
+.spine[data-foil] .spine-title,
+.spine[data-foil] .spine-year {
+  color: transparent;
+  text-shadow: none;
+  background: linear-gradient(
+    180deg,
+    #f8e6ad,
+    #dcbb72 45%,
+    #f4dc98 70%,
+    #cfae5e
+  );
+  background-clip: text;
+  opacity: 1;
+  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.35));
+}
+
+.spine[data-foil="dark"] .spine-title,
+.spine[data-foil="dark"] .spine-year {
+  background: linear-gradient(
+    180deg,
+    #8a6a2a,
+    #6b4f1c 45%,
+    #86672c 70%,
+    #5a4216
+  );
+  background-clip: text;
+  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.2));
+}
+
+/* Black foil for a mid-tone cloth that takes neither gold; the highlight
+   sits under the letters, the way a blind-stamped edge catches light. */
+.spine[data-foil="black"] .spine-title,
+.spine[data-foil="black"] .spine-year {
+  background: linear-gradient(
+    180deg,
+    #2f2721,
+    #120e0b 45%,
+    #27201a 70%,
+    #0b0806
+  );
+  background-clip: text;
+  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.3));
+}
+
+/* Pewter for a mid-tone cloth whose ink would have been pale. */
+.spine[data-foil="silver"] .spine-title,
+.spine[data-foil="silver"] .spine-year {
+  background: linear-gradient(
+    180deg,
+    #fffdf7,
+    #e3ddd2 45%,
+    #faf6ee 70%,
+    #cfc8bc
+  );
+  background-clip: text;
+  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.4));
+}
+
+.spine.spine-flat .spine-title {
+  writing-mode: horizontal-tb;
+}
+
+.spine.spine-unopened .spine-title {
+  font-size: 12px;
+  text-transform: lowercase;
+  letter-spacing: 0.12em;
+  text-shadow: none;
+}
+
+.shelf-mini .spine .spine-title {
+  font-size: 9px;
+  letter-spacing: 0.04em;
+}
+
+.spine[data-ink="dark"] .spine-title {
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+/* --------------------------------------------------------------- moods */
+
+.mood-dot {
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  background: var(--mood-color, var(--ink-faint));
+  border-radius: 999px;
+}
+
+[data-mood="1"] {
+  --mood-color: var(--mood-1);
+}
+[data-mood="2"] {
+  --mood-color: var(--mood-2);
+}
+[data-mood="3"] {
+  --mood-color: var(--mood-3);
+}
+[data-mood="4"] {
+  --mood-color: var(--mood-4);
+}
+[data-mood="5"] {
+  --mood-color: var(--mood-5);
+}
+
+.mood-choice {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid var(--rule-strong);
+  border-radius: 999px;
+  transition:
+    background 0.15s,
+    transform 0.1s;
+}
+
+.mood-choice:hover {
+  border-color: var(--mood-color);
+  transform: scale(1.14);
+}
+
+.mood-choice[data-selected="true"] {
+  background: var(--mood-color);
+  border-color: var(--mood-color);
+}
+
+/* -------------------------------------------------------------- volume */
+
+.volume-plate {
+  padding: 4px 0 4px 22px;
+  border-left: 4px solid var(--volume-color, var(--accent));
+}
+
+/* Cloth swatches, cut like little spines so they read as bindings. */
+.swatch {
+  position: relative;
+  width: 22px;
+  height: 34px;
+  padding: 0;
+  cursor: pointer;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.24) 0%,
+      rgba(255, 255, 255, 0.04) 14%,
+      rgba(0, 0, 0, 0) 62%,
+      rgba(0, 0, 0, 0.34) 100%
+    ),
+    var(--swatch);
+  border: 0;
+  border-radius: 1px 3px 3px 1px;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.22);
+  transition: transform 0.16s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+
+.swatch:hover,
+.swatch:has(:focus-visible) {
+  transform: translateY(-3px);
+}
+
+.swatch[data-selected="true"] {
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.22),
+    0 0 0 2px var(--paper-raised),
+    0 0 0 3.5px var(--ink-soft);
+}
+
+.swatch:has(:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* The wildcard: a colour picker dressed as one more swatch. Until a colour
+   is chosen it shows a wheel so it reads as "anything". */
+.swatch-custom {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.24) 0%,
+      rgba(255, 255, 255, 0.04) 14%,
+      rgba(0, 0, 0, 0) 62%,
+      rgba(0, 0, 0, 0.34) 100%
+    ),
+    linear-gradient(var(--swatch), var(--swatch)),
+    conic-gradient(
+      from 0deg,
+      #8c5a5a,
+      #8a6b3d,
+      #4a5d3b,
+      #3d5a6c,
+      #4a4a6a,
+      #5c3b4a,
+      #8c5a5a
+    );
+}
+
+.swatch-custom input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  cursor: pointer;
+  border: 0;
+  opacity: 0;
+}
+
+/* Calendar heatmap for one volume. */
+.heat-day {
+  width: 100%;
+  aspect-ratio: 1;
+  padding: 0;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-faint);
+  cursor: pointer;
+  background: color-mix(
+    in srgb,
+    var(--viz-mark) calc(var(--fill, 0) * 100%),
+    var(--grid-empty)
+  );
+  border: 0;
+  border-radius: 2px;
+  transition: box-shadow 0.12s;
+}
+
+.heat-day[data-written="true"] {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.heat-day:hover {
+  box-shadow: 0 0 0 1px var(--ink-soft);
+}
+
+.heat-day[data-blank="true"] {
+  visibility: hidden;
+  cursor: default;
+  background: none;
+}
+
+.heat-day[data-today="true"] {
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+/* ---------------------------------------------------------------- page */
+
+/* The written body of a page: serif, generous leading, a drop cap. */
+.prose-page {
+  max-width: 66ch;
+  font-family: var(--font-serif);
+  font-size: 18.5px;
+  line-height: 1.78;
+  color: var(--ink);
+}
+
+.prose-page > p:first-of-type::first-letter {
+  float: left;
+  padding: 0.06em 0.1em 0 0;
+  font-size: 3.1em;
+  line-height: 0.86;
+  color: var(--accent);
+}
+
+.prose-page p {
+  margin: 0 0 1.1em;
+}
+
+.prose-page h1,
+.prose-page h2,
+.prose-page h3 {
+  margin: 1.6em 0 0.5em;
+  font-weight: 400;
+  line-height: 1.3;
+}
+
+.prose-page h1 {
+  font-size: 1.5em;
+}
+.prose-page h2 {
+  font-size: 1.3em;
+}
+.prose-page h3 {
+  font-size: 1.1em;
+}
+
+.prose-page a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.prose-page img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 3px;
+}
+
+.prose-page hr {
+  margin: 2em 0;
+  border: 0;
+  border-top: 1px solid var(--rule);
+}
+
+.prose-page blockquote {
+  padding-left: 20px;
+  margin: 1.4em 0;
+  font-style: italic;
+  color: var(--ink-soft);
+  border-left: 2px solid var(--rule-strong);
+}
+
+.prose-page code {
+  font-size: 0.85em;
+}
+
+.prose-page pre {
+  padding: 14px 16px;
+  overflow-x: auto;
+  font-size: 0.85em;
+  background: var(--paper-sunk);
+  border-radius: 4px;
+}
+
+.prose-page pre code {
+  padding: 0;
+  background: none;
+}
+
+.prose-page ul,
+.prose-page ol {
+  padding-left: 1.3em;
+  margin: 0 0 1.1em;
+}
+
+.prose-page ul {
+  list-style: disc;
+}
+.prose-page ol {
+  list-style: decimal;
+}
+
+.prose-page li {
+  margin-bottom: 0.4em;
+}
+
+/* The editor's body mirrors the read view so nothing jumps on save. */
+.editor-textarea {
+  width: 100%;
+  max-width: 66ch;
+  min-height: 46vh;
+  font-family: var(--font-serif);
+  font-size: 18.5px;
+  line-height: 1.78;
+  color: var(--ink);
+  resize: vertical;
+  background: none;
+  border: 0;
+}
+
+.editor-textarea:focus {
+  outline: none;
+}
+
+.editor-textarea::placeholder,
+.editor-title::placeholder {
+  color: var(--ink-faint);
+  opacity: 0.7;
+}
+
+.editor-title {
+  width: 100%;
+  min-width: 0;
+  padding: 0 0 6px;
+  font-family: var(--font-serif);
+  font-size: clamp(26px, 4vw, 38px);
+  line-height: 1.2;
+  color: var(--ink);
+  background: none;
+  border: 0;
+  border-bottom: 1px solid transparent;
+}
+
+.editor-title:focus {
+  outline: none;
+  border-bottom-color: var(--rule-strong);
+}
+
+.tag-chip {
+  display: inline-flex;
+  gap: 6px;
+  align-items: baseline;
+  padding: 1px 7px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--ink-soft);
+  white-space: nowrap;
+  text-decoration: none;
+  background: var(--paper-sunk);
+  border: 1px solid transparent;
+  border-radius: 3px;
+  transition:
+    border-color 0.14s,
+    color 0.14s;
+}
+
+.tag-chip:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.tag-chip[data-large="true"] {
+  padding: 4px 12px;
+  font-size: 14px;
+}
+
+.tag-chip em {
+  font-size: 12px;
+  font-style: normal;
+  color: var(--ink-faint);
+}
+
+/* Older / newer page links at the foot of a page. */
+.page-nav-link {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 14px 16px;
+  color: inherit;
+  text-align: left;
+  text-decoration: none;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+
+.page-nav-link:hover {
+  background: var(--paper-raised);
+  border-color: var(--ink-faint);
+}
+
+.page-nav-link[data-direction="newer"] {
+  align-items: flex-end;
+  text-align: right;
+}
+
+/* Entry rows in a list. */
+.entry-row + .entry-row {
+  border-top: 1px solid var(--rule);
+}
+
+/* Media in the page and the editor. */
+.media-frame {
+  overflow: hidden;
+  background: var(--paper-sunk);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+}
+
+.media-frame video,
+.media-frame img {
+  display: block;
+  width: 100%;
+  max-height: 70vh;
+  background: #000;
+}
+
+.media-caption {
+  padding: 8px 12px;
+  font-family: var(--font-serif);
+  font-size: 15px;
+  font-style: italic;
+  color: var(--ink-soft);
+}
+
+.dropzone {
+  padding: 22px;
+  color: var(--ink-faint);
+  text-align: center;
+  border: 1px dashed var(--rule-strong);
+  border-radius: 4px;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+
+.dropzone[data-active="true"] {
+  color: var(--accent);
+  background: var(--paper-raised);
+  border-color: var(--accent);
+}
+
+.upload-bar {
+  height: 3px;
+  overflow: hidden;
+  background: var(--rule);
+  border-radius: 2px;
+}
+
+.upload-bar > span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.2s ease;
+}
+
+/* ----------------------------------------------------------------- atlas */
+
+/* Each picture is a section under a hairline, not a card. */
+.viz-card {
+  min-width: 0;
+  padding: 18px 0 8px;
+  border-top: 1px solid var(--rule);
+}
+
+.viz-title {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 400;
+}
+
+.viz-subtitle {
+  max-width: 60ch;
+  margin: 4px 0 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ink-faint);
+}
+
+/* One cell of the life grid: a day, a week or a month. */
+.life-cell {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: var(--cell, 11px);
+  height: var(--cell, 11px);
+  padding: 0;
+  font-family: var(--font-sans);
+  font-size: 10px;
+  color: var(--ink-faint);
+  text-decoration: none;
+  background: var(--viz-band-0);
+  border: 0;
+  border-radius: 2px;
+}
+
+a.life-cell:hover {
+  outline: 1px solid var(--ink-soft);
+  outline-offset: 1px;
+}
+
+.life-cell[data-band="1"] {
+  background: var(--viz-band-1);
+}
+.life-cell[data-band="2"] {
+  background: var(--viz-band-2);
+}
+.life-cell[data-band="3"] {
+  background: var(--viz-band-3);
+}
+.life-cell[data-band="4"] {
+  background: var(--viz-band-4);
+}
+.life-cell[data-band="5"] {
+  background: var(--viz-band-5);
+}
+
+.life-cell[data-band="3"],
+.life-cell[data-band="4"],
+.life-cell[data-band="5"] {
+  color: rgba(251, 247, 238, 0.85);
+}
+
+.life-cell[data-missing="true"],
+.life-cell-label {
+  background: none;
+}
+
+.life-grid-months .life-cell {
+  --cell: 24px;
+}
+
+/* Days, weeks or months: quiet words, the chosen one underlined. */
+.grain-picker {
+  display: inline-flex;
+  gap: 16px;
+  padding: 0;
+  margin: 0;
+  border: 0;
+}
+
+.grain-option {
+  padding-bottom: 2px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--ink-faint);
+  cursor: pointer;
+  border-bottom: 1px solid transparent;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
+}
+
+.grain-option:hover {
+  color: var(--ink);
+}
+
+.grain-option[data-selected="true"] {
+  color: var(--ink);
+  border-bottom-color: var(--accent);
+}
+
+.grain-option:has(:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* Recharts inherits these through CSS variables in the components. */
+.recharts-cartesian-axis-tick-value {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  fill: var(--ink-faint);
+}
+
+.recharts-cartesian-grid line {
+  stroke: var(--rule);
+}
+
+/* ------------------------------------------------------------ transitions */
 
 .rise-in {
   animation: rise-in 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -258,8 +1549,46 @@ body {
   }
 }
 
+/* Motion collapses to a fade for readers who asked for less of it: the spine
+   lift and the page rise become opacity changes. */
 @media (prefers-reduced-motion: reduce) {
   .rise-in {
-    animation: none;
+    animation: fade-in 300ms ease both;
+  }
+
+  .spine,
+  .mood-choice,
+  .nav-link::after {
+    transition: opacity 0.2s;
+  }
+
+  .spine:hover,
+  .spine:focus-visible {
+    --spine-lift: 0;
+    opacity: 0.85;
+  }
+
+  .mood-choice:hover {
+    transform: none;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 620px) {
+  .shelf-books {
+    min-height: 250px;
+    padding: 16px 12px 0;
+  }
+
+  kbd {
+    display: none;
   }
 }

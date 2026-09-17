@@ -4,7 +4,7 @@
   "type": "module",
   "exports": {
     ".": "./src/client.ts",
-    "./notes": "./src/notes.ts",
+    "./journal": "./src/journal.ts",
     "./shared": "./src/shared.ts"
   },
   "scripts": {
@@ -14,6 +14,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "date-fns": "^4.4.0",
     "mongodb": "^6.21.0"
   },
   "devDependencies": {

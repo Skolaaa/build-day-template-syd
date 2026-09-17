@@ -46,3 +46,4 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 
 # local MongoDB data (mongodb-memory-server, see packages/mongo)
 .mongo-data
+.playwright-mcp

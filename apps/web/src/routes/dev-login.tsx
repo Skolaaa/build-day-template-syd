@@ -29,7 +29,7 @@ function DevLogin() {
       return;
     }
 
-    // biome-ignore lint/suspicious/noUnnecessaryConditions: consumed.current is mutated below to guard against re-consuming a single-use ticket.
+    // consumed.current is mutated below to guard against re-consuming a single-use ticket.
     if (consumed.current) {
       return;
     }
