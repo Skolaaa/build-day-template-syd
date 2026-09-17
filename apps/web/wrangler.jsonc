@@ -4,5 +4,18 @@
   "compatibility_date": "2026-08-19",
   "compatibility_flags": ["nodejs_compat"],
   "main": "src/server.ts",
-  "observability": { "enabled": true }
+  "observability": { "enabled": true },
+  // The top level has no R2 binding on purpose: it deploys on any account and
+  // the journal runs text-only. The `media` environment adds the bucket for
+  // video and images. `bun run dev` uses it (the local R2 needs no account);
+  // `bun run deploy:media` deploys it once `wrangler r2 bucket create
+  // life-on-a-shelf-media` has succeeded. See README "Media".
+  "env": {
+    "media": {
+      "name": "life-on-a-shelf",
+      "r2_buckets": [
+        { "binding": "MEDIA", "bucket_name": "life-on-a-shelf-media" }
+      ]
+    }
+  }
 }

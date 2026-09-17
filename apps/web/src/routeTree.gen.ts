@@ -10,19 +10,24 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AboutRouteImport } from './routes/about'
+import { Route as AtlasRouteImport } from './routes/atlas'
 import { Route as DevLoginRouteImport } from './routes/dev-login'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as NotesRouteImport } from './routes/notes'
+import { Route as OnThisDayRouteImport } from './routes/on-this-day'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as WriteRouteImport } from './routes/write'
+import { Route as EntryDateRouteImport } from './routes/entry.$date'
+import { Route as TagTagRouteImport } from './routes/tag.$tag'
+import { Route as VolumePeriodKeyRouteImport } from './routes/volume.$periodKey'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AboutRoute = AboutRouteImport.update({
-  id: '/about',
-  path: '/about',
+const AtlasRoute = AtlasRouteImport.update({
+  id: '/atlas',
+  path: '/atlas',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DevLoginRoute = DevLoginRouteImport.update({
@@ -35,48 +40,124 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const NotesRoute = NotesRouteImport.update({
-  id: '/notes',
-  path: '/notes',
+const OnThisDayRoute = OnThisDayRouteImport.update({
+  id: '/on-this-day',
+  path: '/on-this-day',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WriteRoute = WriteRouteImport.update({
+  id: '/write',
+  path: '/write',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EntryDateRoute = EntryDateRouteImport.update({
+  id: '/entry/$date',
+  path: '/entry/$date',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TagTagRoute = TagTagRouteImport.update({
+  id: '/tag/$tag',
+  path: '/tag/$tag',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VolumePeriodKeyRoute = VolumePeriodKeyRouteImport.update({
+  id: '/volume/$periodKey',
+  path: '/volume/$periodKey',
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
+  '/atlas': typeof AtlasRoute
   '/dev-login': typeof DevLoginRoute
   '/login': typeof LoginRoute
-  '/notes': typeof NotesRoute
+  '/on-this-day': typeof OnThisDayRoute
+  '/settings': typeof SettingsRoute
+  '/write': typeof WriteRoute
+  '/entry/$date': typeof EntryDateRoute
+  '/tag/$tag': typeof TagTagRoute
+  '/volume/$periodKey': typeof VolumePeriodKeyRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
+  '/atlas': typeof AtlasRoute
   '/dev-login': typeof DevLoginRoute
   '/login': typeof LoginRoute
-  '/notes': typeof NotesRoute
+  '/on-this-day': typeof OnThisDayRoute
+  '/settings': typeof SettingsRoute
+  '/write': typeof WriteRoute
+  '/entry/$date': typeof EntryDateRoute
+  '/tag/$tag': typeof TagTagRoute
+  '/volume/$periodKey': typeof VolumePeriodKeyRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
+  '/atlas': typeof AtlasRoute
   '/dev-login': typeof DevLoginRoute
   '/login': typeof LoginRoute
-  '/notes': typeof NotesRoute
+  '/on-this-day': typeof OnThisDayRoute
+  '/settings': typeof SettingsRoute
+  '/write': typeof WriteRoute
+  '/entry/$date': typeof EntryDateRoute
+  '/tag/$tag': typeof TagTagRoute
+  '/volume/$periodKey': typeof VolumePeriodKeyRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about' | '/dev-login' | '/login' | '/notes'
+  fullPaths:
+    | '/'
+    | '/atlas'
+    | '/dev-login'
+    | '/login'
+    | '/on-this-day'
+    | '/settings'
+    | '/write'
+    | '/entry/$date'
+    | '/tag/$tag'
+    | '/volume/$periodKey'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/dev-login' | '/login' | '/notes'
-  id: '__root__' | '/' | '/about' | '/dev-login' | '/login' | '/notes'
+  to:
+    | '/'
+    | '/atlas'
+    | '/dev-login'
+    | '/login'
+    | '/on-this-day'
+    | '/settings'
+    | '/write'
+    | '/entry/$date'
+    | '/tag/$tag'
+    | '/volume/$periodKey'
+  id:
+    | '__root__'
+    | '/'
+    | '/atlas'
+    | '/dev-login'
+    | '/login'
+    | '/on-this-day'
+    | '/settings'
+    | '/write'
+    | '/entry/$date'
+    | '/tag/$tag'
+    | '/volume/$periodKey'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AboutRoute: typeof AboutRoute
+  AtlasRoute: typeof AtlasRoute
   DevLoginRoute: typeof DevLoginRoute
   LoginRoute: typeof LoginRoute
-  NotesRoute: typeof NotesRoute
+  OnThisDayRoute: typeof OnThisDayRoute
+  SettingsRoute: typeof SettingsRoute
+  WriteRoute: typeof WriteRoute
+  EntryDateRoute: typeof EntryDateRoute
+  TagTagRoute: typeof TagTagRoute
+  VolumePeriodKeyRoute: typeof VolumePeriodKeyRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -88,11 +169,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/about': {
-      id: '/about'
-      path: '/about'
-      fullPath: '/about'
-      preLoaderRoute: typeof AboutRouteImport
+    '/atlas': {
+      id: '/atlas'
+      path: '/atlas'
+      fullPath: '/atlas'
+      preLoaderRoute: typeof AtlasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dev-login': {
@@ -109,11 +190,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/notes': {
-      id: '/notes'
-      path: '/notes'
-      fullPath: '/notes'
-      preLoaderRoute: typeof NotesRouteImport
+    '/on-this-day': {
+      id: '/on-this-day'
+      path: '/on-this-day'
+      fullPath: '/on-this-day'
+      preLoaderRoute: typeof OnThisDayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/write': {
+      id: '/write'
+      path: '/write'
+      fullPath: '/write'
+      preLoaderRoute: typeof WriteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/entry/$date': {
+      id: '/entry/$date'
+      path: '/entry/$date'
+      fullPath: '/entry/$date'
+      preLoaderRoute: typeof EntryDateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tag/$tag': {
+      id: '/tag/$tag'
+      path: '/tag/$tag'
+      fullPath: '/tag/$tag'
+      preLoaderRoute: typeof TagTagRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/volume/$periodKey': {
+      id: '/volume/$periodKey'
+      path: '/volume/$periodKey'
+      fullPath: '/volume/$periodKey'
+      preLoaderRoute: typeof VolumePeriodKeyRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -121,10 +237,15 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AboutRoute: AboutRoute,
+  AtlasRoute: AtlasRoute,
   DevLoginRoute: DevLoginRoute,
   LoginRoute: LoginRoute,
-  NotesRoute: NotesRoute,
+  OnThisDayRoute: OnThisDayRoute,
+  SettingsRoute: SettingsRoute,
+  WriteRoute: WriteRoute,
+  EntryDateRoute: EntryDateRoute,
+  TagTagRoute: TagTagRoute,
+  VolumePeriodKeyRoute: VolumePeriodKeyRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

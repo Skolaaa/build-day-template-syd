@@ -581,19 +581,15 @@ export async function updateMedia(
 export async function setMediaPoster(
   db: Db,
   userId: string,
-  mediaKey: string,
+  entryId: string,
+  mediaId: string,
   posterKey: string
 ): Promise<Entry | null> {
-  const parsed = parseMediaKey(mediaKey);
-  if (
-    !parsed ||
-    parsed.userId !== userId ||
-    !ObjectIdCtor.isValid(parsed.entryId)
-  ) {
+  if (!ObjectIdCtor.isValid(entryId)) {
     return null;
   }
   const doc = await entries(db).findOneAndUpdate(
-    { _id: new ObjectIdCtor(parsed.entryId), "media.key": mediaKey, userId },
+    { _id: new ObjectIdCtor(entryId), "media.id": mediaId, userId },
     { $set: { "media.$.posterKey": posterKey, updatedAt: new Date() } },
     { returnDocument: "after" }
   );

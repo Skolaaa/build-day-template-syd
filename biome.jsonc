@@ -18,5 +18,15 @@
       "!.agents",
       "!.claude/skills"
     ]
+  },
+  "linter": {
+    "rules": {
+      // Inline arrow handlers are idiomatic React 19 and the compiler-era
+      // guidance; wrapping every onClick in useCallback obscures the code.
+      "performance": { "noJsxPropsBind": "off" },
+      // Biome's type inference does not see through useState<T | null> and
+      // useRef<T | null>, so this rule flags every real null check as unnecessary.
+      "suspicious": { "noUnnecessaryConditions": "off" }
+    }
   }
 }

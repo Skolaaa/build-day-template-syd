@@ -10,10 +10,11 @@ const NEXT_MODE: Record<ThemeMode, ThemeMode> = {
   light: "dark",
 };
 
+// Light and dark are "day" and "night" here: lamplight on the same shelf.
 const MODE_LABEL: Record<ThemeMode, string> = {
   auto: "Auto",
-  dark: "Dark",
-  light: "Light",
+  dark: "Night",
+  light: "Day",
 };
 
 const MODE_ICON = {
@@ -42,7 +43,7 @@ function getInitialMode(): ThemeMode {
   return "auto";
 }
 
-function applyThemeMode(mode: ThemeMode) {
+export function applyThemeMode(mode: ThemeMode) {
   const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
   const resolved = resolveTheme(mode, prefersDark);
 
@@ -56,15 +57,24 @@ function applyThemeMode(mode: ThemeMode) {
   }
 
   document.documentElement.style.colorScheme = resolved;
+  window.localStorage.setItem("theme", mode);
 }
 
-export default function ThemeToggle() {
+/** The saved mode, kept in sync with the toggle and the OS. */
+export function useThemeMode(): [ThemeMode, (mode: ThemeMode) => void] {
   const [mode, setMode] = useState<ThemeMode>("auto");
 
   useEffect(() => {
     const initialMode = getInitialMode();
     setMode(initialMode);
     applyThemeMode(initialMode);
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === "theme") {
+        setMode(getInitialMode());
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
   }, []);
 
   useEffect(() => {
@@ -81,24 +91,28 @@ export default function ThemeToggle() {
     };
   }, [mode]);
 
-  function toggleMode() {
-    const nextMode = NEXT_MODE[mode];
-    setMode(nextMode);
-    applyThemeMode(nextMode);
-    window.localStorage.setItem("theme", nextMode);
-  }
+  const change = (next: ThemeMode) => {
+    setMode(next);
+    applyThemeMode(next);
+  };
+
+  return [mode, change];
+}
+
+export default function ThemeToggle() {
+  const [mode, setMode] = useThemeMode();
 
   const label =
     mode === "auto"
-      ? "Theme mode: auto (system). Click to switch to light mode."
-      : `Theme mode: ${mode}. Click to switch mode.`;
+      ? "Theme: auto (follows the system). Click for day."
+      : `Theme: ${MODE_LABEL[mode].toLowerCase()}. Click to change.`;
 
   const ModeIcon = MODE_ICON[mode];
 
   return (
     <Button
       aria-label={label}
-      onClick={toggleMode}
+      onClick={() => setMode(NEXT_MODE[mode])}
       size="sm"
       title={label}
       type="button"

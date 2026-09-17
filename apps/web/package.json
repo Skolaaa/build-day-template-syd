@@ -10,9 +10,11 @@
     "cf-typegen": "wrangler types",
     "create-dev-user": "bun scripts/create-dev-user.ts",
     "deploy": "bun run build && wrangler deploy",
-    "dev": "vite dev --port 3000",
+    "deploy:media": "CLOUDFLARE_ENV=media bun run build && wrangler deploy --env media",
+    "dev": "CLOUDFLARE_ENV=media vite dev --port 3000",
     "generate-routes": "tsr generate",
     "preview": "vite preview",
+    "seed": "bun scripts/seed.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -40,8 +42,10 @@
     "react": "^19.2.0",
     "react-day-picker": "^10.0.1",
     "react-dom": "^19.2.0",
+    "react-markdown": "^10.1.0",
     "react-resizable-panels": "^4.12.3",
     "recharts": "3.8.0",
+    "remark-gfm": "^4.0.1",
     "shadcn": "^4.19.0",
     "sonner": "^2.0.8",
     "tailwind-merge": "^3.6.0",
