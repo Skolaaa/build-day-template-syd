@@ -14,6 +14,7 @@ import {
   useGridGranularity,
 } from "#/components/atlas/life-grid";
 import { JournalError, Loading } from "#/components/journal/states";
+import { StreakLine } from "#/components/journal/streak-line";
 import { getAtlasFn } from "#/server/journal";
 
 export const Route = createFileRoute("/atlas")({
@@ -115,7 +116,7 @@ function AtlasPage() {
         ) : null}
         .{" "}
         <span className="text-ink-soft">
-          <Runs current={stats.currentStreak} longest={stats.longestStreak} />
+          <StreakLine stats={stats} />
         </span>
       </p>
 
@@ -195,16 +196,4 @@ function AtlasPage() {
       </div>
     </main>
   );
-}
-
-/** The streaks, said plainly. */
-function Runs({ current, longest }: { current: number; longest: number }) {
-  if (longest <= 1) {
-    return null;
-  }
-  const running =
-    current > 1 ? `${plural(current, "day")} in a row right now` : null;
-  const best = `the longest run was ${plural(longest, "day")}`;
-  const line = running ? `${running}; ${best}` : best;
-  return <>{line.charAt(0).toUpperCase() + line.slice(1)}.</>;
 }

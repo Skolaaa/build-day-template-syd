@@ -182,6 +182,11 @@ export function LifeGrid({
   return <WeekGrid today={today} weeks={weeks} />;
 }
 
+/** The year a sorted key starts with; 0 when there is no such key. */
+function yearOf(key: string | undefined): number {
+  return key ? Number(key.slice(0, 4)) : 0;
+}
+
 function yearsBetween(first: number, last: number): number[] {
   return Array.from({ length: last - first + 1 }, (_, i) => first + i);
 }
@@ -249,10 +254,9 @@ function Cell({ band, label, to, future = false, children }: CellProps) {
 function WeekGrid({ weeks, today }: { today: string; weeks: AtlasWeek[] }) {
   const byWeek = new Map(weeks.map((w) => [w.week, w]));
   const cuts = quantileCuts(weeks.map((w) => w.words));
-  const years = weeks.map((w) => Number(w.week.slice(0, 4)));
   const todayDate = parseIsoDate(today);
   const thisWeek = `${getISOWeekYear(todayDate)}-W${String(getISOWeek(todayDate)).padStart(2, "0")}`;
-  const rows = yearsBetween(Math.min(...years), Math.max(...years));
+  const rows = yearsBetween(yearOf(weeks[0]?.week), yearOf(weeks.at(-1)?.week));
 
   return (
     <div className="overflow-x-auto pb-1">
@@ -295,9 +299,11 @@ function WeekGrid({ weeks, today }: { today: string; weeks: AtlasWeek[] }) {
 function MonthGrid({ months, today }: { months: AtlasMonth[]; today: string }) {
   const byMonth = new Map(months.map((m) => [m.month, m]));
   const cuts = quantileCuts(months.map((m) => m.words));
-  const years = months.map((m) => Number(m.month.slice(0, 4)));
   const thisMonth = today.slice(0, 7);
-  const rows = yearsBetween(Math.min(...years), Math.max(...years));
+  const rows = yearsBetween(
+    yearOf(months[0]?.month),
+    yearOf(months.at(-1)?.month)
+  );
 
   return (
     <div className="life-grid-months overflow-x-auto pb-1">
@@ -346,8 +352,14 @@ function MonthGrid({ months, today }: { months: AtlasMonth[]; today: string }) {
 function DayGrid({ days, today }: { days: AtlasDay[]; today: string }) {
   const byDate = new Map(days.map((d) => [d.date, d]));
   const cuts = quantileCuts(days.map((d) => d.words));
-  const years = days.map((d) => getISOWeekYear(parseIsoDate(d.date)));
-  const blocks = yearsBetween(Math.min(...years), Math.max(...years));
+  // Rows arrive sorted, so the ends give the range; the ISO week-year can
+  // differ from the calendar year by one at either end of December.
+  const [first] = days;
+  const last = days.at(-1);
+  const blocks = yearsBetween(
+    first ? getISOWeekYear(parseIsoDate(first.date)) : 0,
+    last ? getISOWeekYear(parseIsoDate(last.date)) : 0
+  );
 
   return (
     <div className="overflow-x-auto pb-1">

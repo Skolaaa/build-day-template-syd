@@ -3,11 +3,11 @@ import {
   formatLongDate,
   periodKeyFor,
   plural,
-  type ShelfStats,
 } from "@repo/mongo/shared";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { EntryRow } from "#/components/journal/entry-row";
 import { EmptyShelf, JournalError, Loading } from "#/components/journal/states";
+import { StreakLine } from "#/components/journal/streak-line";
 import { TagLink } from "#/components/journal/tag-link";
 import { Bookcase } from "#/components/shelf/bookcase";
 import { Button } from "#/components/ui/button";
@@ -43,7 +43,7 @@ function ShelfPage() {
             {stats.firstEntry ? (
               <>, since {formatLongDate(stats.firstEntry)}</>
             ) : null}
-            . <RunLine stats={stats} />
+            . <StreakLine stats={stats} />
           </p>
         )}
       </section>
@@ -102,27 +102,6 @@ function ShelfPage() {
       )}
     </main>
   );
-}
-
-/** The streaks, said the way a person would say them. */
-function RunLine({ stats }: { stats: ShelfStats }) {
-  if (stats.daysWritten === 0) {
-    return null;
-  }
-  const running =
-    stats.currentStreak > 1
-      ? `${plural(stats.currentStreak, "day")} in a row and counting`
-      : null;
-  const longest =
-    stats.longestStreak > 1
-      ? `the longest run was ${plural(stats.longestStreak, "day")}`
-      : null;
-  const parts = [running, longest].filter((part) => part !== null);
-  if (parts.length === 0) {
-    return null;
-  }
-  const line = parts.join("; ");
-  return <>{line.charAt(0).toUpperCase() + line.slice(1)}.</>;
 }
 
 /** Signed out. No marketing, just the door. */

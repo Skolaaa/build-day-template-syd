@@ -28,6 +28,8 @@ interface CoverEditorProps {
 }
 
 const PREVIEW_HEIGHT_SCALE = 0.8;
+const HEX_DIGITS = 6;
+const LEADING_HASH = /^#/;
 
 /** Title, subtitle and cloth colour for a volume, saved inline. */
 export function CoverEditor({
@@ -56,7 +58,8 @@ export function CoverEditor({
   };
 
   const onHexChange = (raw: string) => {
-    const next = raw.startsWith("#") ? raw : `#${raw}`;
+    const digits = raw.replace(LEADING_HASH, "").slice(0, HEX_DIGITS);
+    const next = `#${digits}`;
     setHexDraft(next);
     if (HEX_COLOR.test(next)) {
       setColor(next.toLowerCase());
@@ -170,7 +173,7 @@ export function CoverEditor({
                 aria-label="Colour as a hex value"
                 className="h-8 w-[7.5em] font-mono text-[12.5px] tabular-nums"
                 id={`${id}-hex`}
-                maxLength={7}
+                maxLength={HEX_DIGITS + 1}
                 onChange={(event) => onHexChange(event.target.value)}
                 spellCheck={false}
                 value={hexDraft}

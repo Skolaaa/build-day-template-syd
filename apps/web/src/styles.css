@@ -933,10 +933,10 @@
 .spine[data-foil="black"] .spine-year {
   background: linear-gradient(
     180deg,
-    #3e342b,
-    #1a1510 45%,
-    #352d25 70%,
-    #120e0b
+    #2f2721,
+    #120e0b 45%,
+    #27201a 70%,
+    #0b0806
   );
   background-clip: text;
   filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.3));
@@ -947,10 +947,10 @@
 .spine[data-foil="silver"] .spine-year {
   background: linear-gradient(
     180deg,
-    #f6f2ea,
-    #c3bdb2 45%,
-    #ece7dc 70%,
-    #aaa398
+    #fffdf7,
+    #e3ddd2 45%,
+    #faf6ee 70%,
+    #cfc8bc
   );
   background-clip: text;
   filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.4));

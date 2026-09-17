@@ -148,8 +148,12 @@ describe("spines", () => {
   test("foil follows the cloth: gold where it reads, black or pewter between", () => {
     expect(spineFoilFor("#4a4a6a")).toBe("light");
     expect(spineFoilFor("#e8d5a8")).toBe("dark");
+    // Mustard would take dark ink, so its stamp is black; a grey-blue
+    // would take pale ink, so its stamp is pewter.
     expect(spineFoilFor("#c9973a")).toBe("black");
+    expect(spineInkFor("#c9973a")).toBe(SPINE_INK_DARK);
     expect(spineFoilFor("#6f7f8e")).toBe("silver");
+    expect(spineInkFor("#6f7f8e")).toBe(SPINE_INK_LIGHT);
     for (const hex of SPINE_PALETTE) {
       expect(["dark", "light"]).toContain(spineFoilFor(hex));
     }

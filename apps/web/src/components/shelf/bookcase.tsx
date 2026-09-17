@@ -19,8 +19,11 @@ const MIN_BOOKS_BEFORE_SPACE = 3;
 /** An unopened spine is fixed-width (see .spine-unopened). */
 const UNOPENED_WIDTH = 44;
 const MIN_BOOKS_TO_LEAN = 2;
-/** The widest a flat book can be (its height, lying down) plus its nudge. */
-const PILE_WIDTH = 300;
+/**
+ * What a pile takes on the board: the tallest book lying down (291px), its
+ * largest sideways nudge, the pile's own margin and the row gap.
+ */
+const PILE_WIDTH = 320;
 const PILE_MAX_SHIFT = 14;
 /** Piles go on every other shelf, and only when it still has this many upright. */
 const PILE_EVERY = 2;
@@ -51,7 +54,10 @@ function intoShelves(
   let used = 0;
   let index = 0;
   const wantsPile = () => withPiles && index % PILE_EVERY === 1;
-  const budget = () => (wantsPile() ? width - PILE_WIDTH : width);
+  // Only hold room for a pile while enough volumes remain to make one;
+  // otherwise the row fills the whole board like any other.
+  const budget = (remaining: number) =>
+    wantsPile() && remaining >= PILE_SIZE ? width - PILE_WIDTH : width;
   const close = (remaining: Volume[]): number => {
     const pile =
       wantsPile() &&
@@ -71,7 +77,7 @@ function intoShelves(
   while (i < volumes.length) {
     const volume = volumes[i] as Volume;
     const thickness = spineThickness(volume.entries) + BOOK_GAP;
-    if (row.length > 0 && used + thickness > budget()) {
+    if (row.length > 0 && used + thickness > budget(volumes.length - i)) {
       i += close(volumes.slice(i));
       continue;
     }
@@ -127,13 +133,9 @@ function layoutFor(
   const showUnopened = isLast && unopened;
   const books =
     shelf.volumes.length + shelf.pile.length + (showUnopened ? 1 : 0);
+  const showSpace = isLast && books < MIN_BOOKS_BEFORE_SPACE;
   if (!isLast || mini) {
-    return {
-      bookend: false,
-      lean: 0,
-      showSpace: false,
-      showUnopened,
-    };
+    return { bookend: false, lean: 0, showSpace, showUnopened };
   }
   const spare = shelf.free - (showUnopened ? UNOPENED_WIDTH + BOOK_GAP : 0);
   // A bookend holds the row up, so nothing needs to lean when there is one.
@@ -141,7 +143,7 @@ function layoutFor(
   return {
     bookend,
     lean: bookend ? 0 : leanFor(shelf, showUnopened),
-    showSpace: books < MIN_BOOKS_BEFORE_SPACE,
+    showSpace,
     showUnopened,
   };
 }
@@ -215,10 +217,7 @@ export function Bookcase({
           );
           const lastIndex = shelf.volumes.length - 1;
           return (
-            <div
-              className="shelf"
-              key={shelf.volumes[0]?.periodKey ?? shelf.pile[0]?.periodKey}
-            >
+            <div className="shelf" key={shelf.volumes[0]?.periodKey ?? "empty"}>
               <div className="shelf-books">
                 {shelf.volumes.map((volume, i) => (
                   <Spine

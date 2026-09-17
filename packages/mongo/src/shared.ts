@@ -311,9 +311,11 @@ export type SpineFoil = "black" | "dark" | "light" | "silver";
 
 /**
  * Titles are stamped in foil. Pale gold on dark cloth, old gold on pale
- * cloth; when neither reads on a mid-tone cloth the stamp is black or
- * pewter instead, whichever the title ink would have been, so every book
- * keeps the same glint and still clears 4.5:1.
+ * cloth, each chosen only where it clears 4.5:1. A mid-tone cloth that
+ * takes neither is stamped in black or pewter instead, whichever side the
+ * title ink falls on, so every book keeps the same glint. Those two are
+ * as legible as plain ink would be on that cloth, which for a colour the
+ * reader picked themselves may be less than 4.5:1; the palette never is.
  */
 export function spineFoilFor(color: string): SpineFoil {
   if (contrast(color, FOIL_LIGHT_MID) >= TEXT_MIN_CONTRAST) {
