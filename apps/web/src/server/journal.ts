@@ -31,6 +31,7 @@ import {
   isIsoDate,
   isMood,
   isPeriodKey,
+  isShelfOrder,
   isVolumePeriod,
   type VolumeMetaInput,
 } from "@repo/mongo/shared";
@@ -281,11 +282,14 @@ export const getSettingsPageFn = createServerFn({ method: "GET" }).handler(
 
 export const updateSettingsFn = createServerFn({ method: "POST" })
   .validator((input: unknown) => {
-    const { volumePeriod } = asObject(input);
+    const { shelfOrder, volumePeriod } = asObject(input);
     if (!isVolumePeriod(volumePeriod)) {
       throw new Error("Volume length must be week, month or year.");
     }
-    return { volumePeriod };
+    if (!isShelfOrder(shelfOrder)) {
+      throw new Error("The shelf can run newest or oldest year first.");
+    }
+    return { shelfOrder, volumePeriod };
   })
   .handler(async ({ data }) => {
     const userId = await requireUserId();

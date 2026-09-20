@@ -18,6 +18,7 @@ import {
   BODY_MAX_LENGTH,
   CAPTION_MAX_LENGTH,
   countWords,
+  DEFAULT_SHELF_ORDER,
   DEFAULT_VOLUME_PERIOD,
   type Entry,
   type EntryInput,
@@ -42,6 +43,7 @@ import {
   periodRange,
   type SearchHit,
   type Shelf,
+  type ShelfOrder,
   type ShelfStats,
   spineColorFor,
   TAG_MAX_COUNT,
@@ -93,6 +95,8 @@ interface MediaDocument {
 interface SettingsDocument {
   _id: ObjectId;
   createdAt: Date;
+  /** Missing on documents written before the shelf could be turned over. */
+  shelfOrder?: ShelfOrder;
   updatedAt: Date;
   userId: string;
   volumePeriod: VolumePeriod;
@@ -313,7 +317,10 @@ export async function getSettings(
   userId: string
 ): Promise<JournalSettings> {
   const doc = await settings(db).findOne({ userId });
-  return { volumePeriod: doc?.volumePeriod ?? DEFAULT_VOLUME_PERIOD };
+  return {
+    shelfOrder: doc?.shelfOrder ?? DEFAULT_SHELF_ORDER,
+    volumePeriod: doc?.volumePeriod ?? DEFAULT_VOLUME_PERIOD,
+  };
 }
 
 export async function updateSettings(
@@ -325,12 +332,16 @@ export async function updateSettings(
   await settings(db).updateOne(
     { userId },
     {
-      $set: { updatedAt: now, volumePeriod: input.volumePeriod },
+      $set: {
+        shelfOrder: input.shelfOrder,
+        updatedAt: now,
+        volumePeriod: input.volumePeriod,
+      },
       $setOnInsert: { createdAt: now, userId },
     },
     { upsert: true }
   );
-  return { volumePeriod: input.volumePeriod };
+  return { shelfOrder: input.shelfOrder, volumePeriod: input.volumePeriod };
 }
 
 // ------------------------------------------------------------- entries

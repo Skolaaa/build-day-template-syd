@@ -14,6 +14,7 @@ import {
   periodLabel,
   periodRange,
   periodRangeLabel,
+  periodSpanLabel,
   SPINE_INK_DARK,
   SPINE_INK_LIGHT,
   SPINE_PALETTE,
@@ -42,6 +43,13 @@ describe("period keys", () => {
     // 2027 starts on a Friday: same shape.
     expect(periodKeyFor("2027-01-02", "week")).toBe("2026-W53");
     expect(periodKeyFor("2026-09-17", "week")).toBe("2026-W38");
+  });
+
+  test("periodSpanLabel names the stretch of a year standing on one plank", () => {
+    expect(periodSpanLabel("2026-01", "2026-06")).toBe("Jan – Jun");
+    expect(periodSpanLabel("2026-W01", "2026-W26")).toBe("W1 – W26");
+    expect(periodSpanLabel("2019", "2026")).toBe("2019 – 2026");
+    expect(periodSpanLabel("2026-03", "2026-03")).toBe("Mar");
   });
 
   test("periodRange inverts periodKeyFor at the boundaries", () => {

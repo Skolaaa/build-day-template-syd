@@ -90,11 +90,17 @@
   --rule-strong: #cfc3ad;
   --accent: #8a4433;
   --accent-soft: #b2725c;
-  --wood-top: #c49a6c;
-  --wood-bottom: #8c6543;
+  /* Oak: a lit top edge, the front face, the shade under the overhang. The
+     carve is the groove of an engraved letter; the wall is behind the books. */
+  --wood-top: #b98d60;
+  --wood-face: #96693f;
+  --wood-bottom: #6a472a;
+  --wood-carve: #33200f;
+  --wood-glint: rgba(255, 236, 205, 0.34);
+  --wood-wall: #ebe3d3;
+  /* Grain is a soft touch on pale oak; it can be laid on harder in the dark. */
+  --grain-blend: soft-light;
   --grid-empty: #e4dccc;
-  --bay: #34483f;
-  --bay-ink: rgba(251, 247, 238, 0.72);
   --shadow: rgba(70, 52, 34, 0.28);
 
   /* Moods, 1 (rough) to 5 (bright): a cool-warm walk, never a traffic light. */
@@ -166,11 +172,14 @@
   --rule-strong: #453b30;
   --accent: #d08a6c;
   --accent-soft: #b3735a;
-  --wood-top: #5b4129;
-  --wood-bottom: #35241a;
+  --wood-top: #6b4d31;
+  --wood-face: #4f3722;
+  --wood-bottom: #2e1e13;
+  --wood-carve: #1a100a;
+  --wood-glint: rgba(255, 220, 180, 0.16);
+  --wood-wall: #0f0c0a;
+  --grain-blend: overlay;
   --grid-empty: #262019;
-  --bay: #15201c;
-  --bay-ink: rgba(251, 247, 238, 0.55);
   --shadow: rgba(0, 0, 0, 0.6);
 
   --mood-1: #a86f6f;
@@ -393,44 +402,72 @@
 
 /* ---------------------------------------------------------------- shelf */
 
-/* The cabinet is gone. Books stand on floating oak planks against the
-   paper of the page, one shelf per year, the way a wall of shelves does in
-   a plain, warm room. What carries the feeling now is the wood, the cloth
-   colours and the gilt, not grain and shadow laid on thick. */
-.bookcase {
-  display: flex;
-  flex-direction: column;
-  gap: 30px;
-  padding: 6px 0 12px;
-  margin: 6px 0 36px;
+/* One case, the years stacked in it: two oak uprights, a plank for every
+   year (more when a year runs long), each plank engraved with what stands
+   on it. The wall behind the books is a shade of the page, not a box. The
+   grain is a little noise laid over the wood, not a texture pasted on. */
+:root {
+  --grain-across: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='720' height='48'%3E%3Cfilter id='g' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.005 0.32' numOctaves='3' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix values='1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 0 1'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  --grain-along: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='720'%3E%3Cfilter id='g' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.32 0.005' numOctaves='3' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix values='1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 0 1'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  --upright: 14px;
+  --plank: 26px;
 }
 
-.shelf-row {
+.bookcase {
+  position: relative;
+  padding: 0 var(--upright);
+  margin: 10px 0 40px;
+}
+
+/* The uprights, grain running with the height. They sit in front of the
+   planks so the boards read as let into the sides. */
+.bookcase::before,
+.bookcase::after {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 3;
+  width: var(--upright);
+  content: "";
+  background:
+    var(--grain-along),
+    linear-gradient(
+      90deg,
+      var(--wood-top),
+      var(--wood-face) 45%,
+      var(--wood-bottom)
+    );
+  border-radius: 3px 3px 2px 2px;
+  box-shadow:
+    inset 0 1px 0 var(--wood-glint),
+    0 18px 22px -14px rgba(50, 32, 14, 0.55);
+  background-blend-mode: var(--grain-blend), normal;
+}
+
+.bookcase::before {
+  left: 0;
+}
+
+.bookcase::after {
+  right: 0;
+}
+
+.shelf-case {
+  display: flex;
+  flex-direction: column;
+  background: var(--wood-wall);
+  border-radius: 2px;
+  box-shadow:
+    inset 0 22px 24px -22px rgba(50, 32, 14, 0.35),
+    inset 14px 0 18px -14px rgba(50, 32, 14, 0.28),
+    inset -14px 0 18px -14px rgba(50, 32, 14, 0.28),
+    0 26px 32px -26px var(--shadow);
+}
+
+.shelf-tier {
   position: relative;
   display: flex;
   flex-direction: column;
-}
-
-/* The year, set small at the head of its shelf, with what the year holds. */
-.shelf-label {
-  display: flex;
-  gap: 12px;
-  align-items: baseline;
-  justify-content: space-between;
-  margin: 0 2px 8px;
-  font-family: var(--font-sans);
-  font-size: 11.5px;
-  color: var(--ink-faint);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-}
-
-.shelf-year {
-  font-family: var(--font-serif);
-  font-size: 16px;
-  color: var(--ink-soft);
-  text-transform: none;
-  letter-spacing: 0.04em;
 }
 
 .shelf-books {
@@ -438,23 +475,87 @@
   gap: 4px;
   align-items: flex-end;
   min-height: 120px;
-  padding: 14px 14px 0;
+  padding: 26px 14px 0;
   perspective: 900px;
   perspective-origin: 50% 20%;
 }
 
-/* A plank of oak, floating: a lit top edge, a darker front, and the
-   shadow it throws on the wall beneath. */
+/* A plank of oak: a lit top surface, the front edge with the grain running
+   along it, and the shadow it throws on the books and wall beneath. */
 .shelf-plank {
   position: relative;
   z-index: 1;
-  height: 11px;
-  background: linear-gradient(180deg, var(--wood-top), var(--wood-bottom));
-  border-radius: 2px 2px 4px 4px;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  height: var(--plank);
+  padding: 2px 12px 0;
+  background:
+    var(--grain-across),
+    linear-gradient(
+      180deg,
+      var(--wood-top) 0,
+      var(--wood-top) 3px,
+      var(--wood-face) 4px,
+      var(--wood-face) 78%,
+      var(--wood-bottom) 100%
+    );
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.35),
-    inset 0 -2px 0 rgba(0, 0, 0, 0.16),
-    0 14px 18px -12px rgba(50, 32, 14, 0.5);
+    inset 0 1px 0 var(--wood-glint),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.28),
+    0 12px 14px -8px rgba(40, 26, 12, 0.55);
+  background-blend-mode: var(--grain-blend), normal;
+}
+
+/* Engraved: the letter is the groove, so it is darker than the board, with
+   a fine glint where the light from above catches its lower edge. */
+.shelf-carve {
+  font-family: var(--font-serif);
+  font-size: 12.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--wood-carve);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  white-space: nowrap;
+  text-shadow:
+    0 1px 0 var(--wood-glint),
+    0 -1px 0 rgba(0, 0, 0, 0.35);
+  user-select: none;
+}
+
+.shelf-carve-year {
+  font-size: 15px;
+  letter-spacing: 0.18em;
+}
+
+.shelf-carve-span {
+  padding-left: 14px;
+  border-left: 1px solid rgba(0, 0, 0, 0.22);
+  box-shadow: -1px 0 0 var(--wood-glint);
+  opacity: 0.85;
+}
+
+.shelf-carve-tally {
+  margin-left: auto;
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+@media (max-width: 640px) {
+  :root {
+    --upright: 10px;
+    --plank: 24px;
+  }
+
+  .shelf-books {
+    padding-inline: 8px;
+  }
+
+  .shelf-carve-tally {
+    display: none;
+  }
 }
 
 /* ---- the books ---- */
@@ -645,31 +746,41 @@
 }
 
 .spine-preview .shelf-plank {
-  height: 8px;
+  height: 10px;
+  padding: 0;
+  border-radius: 2px 2px 3px 3px;
 }
 
 /* A miniature of the shelf, for the settings preview. */
 .shelf-mini {
-  gap: 12px;
+  --upright: 8px;
+  --plank: 14px;
+
   margin: 4px 0 8px;
-}
-
-.shelf-mini .shelf-label {
-  margin-bottom: 4px;
-}
-
-.shelf-mini .shelf-year {
-  font-size: 12px;
 }
 
 .shelf-mini .shelf-books {
   gap: 2px;
   min-height: 60px;
-  padding: 8px 8px 0;
+  padding: 12px 8px 0;
 }
 
 .shelf-mini .shelf-plank {
-  height: 6px;
+  gap: 8px;
+  padding-inline: 8px;
+}
+
+.shelf-mini .shelf-carve {
+  font-size: 8px;
+  letter-spacing: 0.1em;
+}
+
+.shelf-mini .shelf-carve-year {
+  font-size: 9px;
+}
+
+.shelf-mini .shelf-carve-span {
+  padding-left: 8px;
 }
 
 .shelf-mini .spine {

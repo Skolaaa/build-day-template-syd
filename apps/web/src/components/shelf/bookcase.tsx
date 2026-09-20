@@ -1,6 +1,9 @@
 import {
   formatCount,
+  granularityOf,
+  periodSpanLabel,
   plural,
+  type ShelfOrder,
   spineThickness,
   type Volume,
 } from "@repo/mongo/shared";
@@ -18,8 +21,8 @@ import { Spine, UnopenedSpine } from "./spine";
 /** What the shelf is laid out for before it has been measured: the page width. */
 const DEFAULT_WIDTH = 1040;
 const BOOK_GAP = 4;
-/** Horizontal padding of a row of books, both sides together. */
-const ROW_PADDING = 28;
+/** The uprights and the books' inset from them, both sides together. */
+const CASE_PADDING = 56;
 /** An unopened spine is fixed-width (see .spine-unopened). */
 const UNOPENED_WIDTH = 44;
 /** The settings preview draws spines at this fraction of their size. */
@@ -29,105 +32,132 @@ const SETTLE_MS = 1400;
 
 interface Row {
   key: string;
-  /** True on the first row of a year, which carries the year's label. */
-  opensYear: boolean;
+  /** The year this plank belongs to; one word for all of them for year volumes. */
+  tier: string;
   /** The current, unwritten volume goes at the end of this row. */
   unopened: boolean;
   volumes: Volume[];
-  year: string;
 }
 
-interface YearTally {
+interface Tally {
   entries: number;
   volumes: number;
   words: number;
 }
 
 /**
+ * Which shelf a volume belongs on. Weeks and months stack by year; year
+ * volumes are one book each, so they share a run of planks.
+ */
+function tierOf(periodKey: string): string {
+  return granularityOf(periodKey) === "year" ? "years" : periodKey.slice(0, 4);
+}
+
+/** A book on a plank, or the space where the current, unwritten one stands. */
+type Item = Volume | "unopened";
+
+function itemWidth(item: Item, scale: number): number {
+  const width =
+    item === "unopened" ? UNOPENED_WIDTH : spineThickness(item.entries);
+  return width * scale + BOOK_GAP;
+}
+
+/**
  * One shelf per year, the books in order, and a new plank whenever a year
  * outgrows the width. Thick books take more room. The current volume, if
- * nothing has been written in it yet, stands at the end of its year.
+ * nothing has been written in it yet, stands at the end of its year. A
+ * year that needs more than one plank fills from the end the reader is
+ * looking at, so the odd plank is the far one, not the first thing seen.
  */
 function packRows(
   volumes: Volume[],
   currentPeriodKey: string,
   unopened: boolean,
   budget: number,
-  scale: number
+  scale: number,
+  order: ShelfOrder
 ): Row[] {
-  const rows: Row[] = [];
-  let row: Volume[] = [];
-  let used = 0;
-  let year = "";
-  let opensYear = true;
-  const flush = () => {
-    const [first] = row;
-    if (first) {
-      rows.push({
-        key: first.periodKey,
-        opensYear,
-        unopened: false,
-        volumes: row,
-        year,
-      });
-      row = [];
-      used = 0;
-      opensYear = false;
-    }
-  };
+  const tiers = new Map<string, Item[]>();
   for (const volume of volumes) {
-    const volumeYear = volume.periodKey.slice(0, 4);
-    if (volumeYear !== year) {
-      flush();
-      year = volumeYear;
-      opensYear = true;
-    }
-    const width = spineThickness(volume.entries) * scale + BOOK_GAP;
-    if (row.length > 0 && used + width > budget) {
-      flush();
-    }
-    row.push(volume);
-    used += width;
+    const tier = tierOf(volume.periodKey);
+    tiers.set(tier, [...(tiers.get(tier) ?? []), volume]);
   }
   if (unopened) {
-    const currentYear = currentPeriodKey.slice(0, 4);
-    if (currentYear !== year) {
-      flush();
-      year = currentYear;
-      opensYear = true;
-    } else if (used + UNOPENED_WIDTH * scale + BOOK_GAP > budget) {
-      flush();
-    }
-    rows.push({
-      key: `${year}-unopened`,
-      opensYear,
-      unopened: true,
-      volumes: row,
-      year,
-    });
-    row = [];
+    const tier = tierOf(currentPeriodKey);
+    tiers.set(tier, [...(tiers.get(tier) ?? []), "unopened"]);
   }
-  flush();
+  const rows: Row[] = [];
+  for (const [tier, items] of tiers) {
+    rows.push(...packTier(tier, items, budget, scale, order === "newest"));
+  }
   return rows;
 }
 
-function tallyYears(volumes: Volume[]): Map<string, YearTally> {
-  const years = new Map<string, YearTally>();
+function packTier(
+  tier: string,
+  items: Item[],
+  budget: number,
+  scale: number,
+  fromEnd: boolean
+): Row[] {
+  const planks: Item[][] = [];
+  let plank: Item[] = [];
+  let used = 0;
+  for (const item of fromEnd ? items.toReversed() : items) {
+    const width = itemWidth(item, scale);
+    if (plank.length > 0 && used + width > budget) {
+      planks.push(plank);
+      plank = [];
+      used = 0;
+    }
+    plank.push(item);
+    used += width;
+  }
+  planks.push(plank);
+  const ordered = fromEnd
+    ? planks.toReversed().map((p) => p.toReversed())
+    : planks;
+  return ordered.map((plankItems) => {
+    const volumes = plankItems.filter((item) => item !== "unopened");
+    const hasUnopened = plankItems.length !== volumes.length;
+    const [first] = volumes;
+    return {
+      key: first ? first.periodKey : `${tier}-unopened`,
+      tier,
+      unopened: hasUnopened,
+      volumes,
+    };
+  });
+}
+
+function tallyTiers(volumes: Volume[]): Map<string, Tally> {
+  const tiers = new Map<string, Tally>();
   for (const volume of volumes) {
-    const year = volume.periodKey.slice(0, 4);
-    const tally = years.get(year) ?? { entries: 0, volumes: 0, words: 0 };
+    const tier = tierOf(volume.periodKey);
+    const tally = tiers.get(tier) ?? { entries: 0, volumes: 0, words: 0 };
     tally.entries += volume.entries;
     tally.volumes += 1;
     tally.words += volume.words;
-    years.set(year, tally);
+    tiers.set(tier, tally);
   }
-  return years;
+  return tiers;
+}
+
+/** The first and last period standing on a plank, the unopened one included. */
+function rowSpan(row: Row, currentPeriodKey: string): [string, string] {
+  const first = row.volumes[0]?.periodKey ?? currentPeriodKey;
+  const last = row.unopened
+    ? currentPeriodKey
+    : (row.volumes.at(-1)?.periodKey ?? first);
+  return [first, last];
 }
 
 interface BookcaseProps {
   /** The period the reader is in now; shown as an unopened spine until written in. */
   currentPeriodKey: string;
   mini?: boolean;
+  /** Which year takes the top shelf. */
+  order?: ShelfOrder;
   volumes: Volume[];
 }
 
@@ -135,6 +165,7 @@ export function Bookcase({
   volumes,
   currentPeriodKey,
   mini = false,
+  order = "newest",
 }: BookcaseProps) {
   const navigate = useNavigate();
   const ref = useRef<HTMLElement>(null);
@@ -148,15 +179,24 @@ export function Bookcase({
   const scale = mini ? MINI_SCALE : 1;
   const currentYear = Number(currentPeriodKey.slice(0, 4));
   const unopened = !volumes.some((v) => v.periodKey === currentPeriodKey);
-  const rows = packRows(
+  const packed = packRows(
     volumes,
     currentPeriodKey,
     unopened,
-    width - ROW_PADDING * scale,
-    scale
+    width - CASE_PADDING * scale,
+    scale,
+    order
   );
-  const years = tallyYears(volumes);
-  const order = new Map(volumes.map((v, i) => [v.periodKey, i]));
+  // Books read left to right in time on every plank; the order setting only
+  // decides which end of the case the present is at.
+  const rows = order === "newest" ? packed.toReversed() : packed;
+  const tallies = tallyTiers(volumes);
+  const plankCount = new Map<string, number>();
+  const lastRowOfTier = new Map<string, string>();
+  for (const row of packed) {
+    plankCount.set(row.tier, (plankCount.get(row.tier) ?? 0) + 1);
+    lastRowOfTier.set(row.tier, row.key);
+  }
   const open = (volume: Volume) =>
     navigate({
       params: { periodKey: volume.periodKey },
@@ -183,6 +223,13 @@ export function Bookcase({
     books[(index + step + books.length) % books.length]?.focus();
   }, []);
 
+  // Books settle in order down the case, whichever way it is turned.
+  const settleFrom: number[] = [];
+  let settled = 0;
+  for (const row of rows) {
+    settleFrom.push(settled);
+    settled += row.volumes.length + (row.unopened ? 1 : 0);
+  }
   return (
     <section
       aria-label="Bookcase"
@@ -190,58 +237,76 @@ export function Bookcase({
       data-entering={entering ? "" : undefined}
       ref={ref}
     >
-      {rows.map((row) => (
-        <div className="shelf-row" key={row.key}>
-          {row.opensYear ? (
-            <ShelfLabel
-              mini={mini}
-              tally={years.get(row.year)}
-              year={row.year}
-            />
-          ) : null}
-          <div className="shelf-books">
-            {row.volumes.map((volume) => (
-              <Spine
-                currentYear={currentYear}
-                glimpse={!mini}
-                index={order.get(volume.periodKey) ?? 0}
-                key={volume.periodKey}
-                onKeyDown={onKeyDown}
-                onOpen={() => open(volume)}
-                volume={volume}
+      <div className="shelf-case">
+        {rows.map((row, rowIndex) => {
+          const [first, last] = rowSpan(row, currentPeriodKey);
+          const from = settleFrom[rowIndex] ?? 0;
+          const split = (plankCount.get(row.tier) ?? 1) > 1;
+          const closes = lastRowOfTier.get(row.tier) === row.key;
+          return (
+            <div className="shelf-tier" key={row.key}>
+              <div className="shelf-books">
+                {row.volumes.map((volume, bookIndex) => (
+                  <Spine
+                    currentYear={currentYear}
+                    glimpse={!mini}
+                    index={from + bookIndex}
+                    key={volume.periodKey}
+                    onKeyDown={onKeyDown}
+                    onOpen={() => open(volume)}
+                    volume={volume}
+                  />
+                ))}
+                {row.unopened ? (
+                  <UnopenedSpine
+                    index={from + row.volumes.length}
+                    onKeyDown={onKeyDown}
+                    onStart={() => navigate({ to: "/write" })}
+                    periodKey={currentPeriodKey}
+                  />
+                ) : null}
+              </div>
+              <Plank
+                label={
+                  row.tier === "years" ? periodSpanLabel(first, last) : row.tier
+                }
+                span={
+                  split && row.tier !== "years"
+                    ? periodSpanLabel(first, last)
+                    : null
+                }
+                tally={closes && !mini ? tallies.get(row.tier) : undefined}
               />
-            ))}
-            {row.unopened ? (
-              <UnopenedSpine
-                index={volumes.length}
-                onKeyDown={onKeyDown}
-                onStart={() => navigate({ to: "/write" })}
-                periodKey={currentPeriodKey}
-              />
-            ) : null}
-          </div>
-          <div aria-hidden="true" className="shelf-plank" />
-        </div>
-      ))}
+            </div>
+          );
+        })}
+      </div>
     </section>
   );
 }
 
-/** The year, set small at the head of its shelf, with what it holds. */
-function ShelfLabel({
-  mini,
+/**
+ * The board the books stand on, with the year cut into its front edge the
+ * way a maker's mark is, and the stretch of the year if it needed more than
+ * one plank. The last plank of a year carries the year's count.
+ */
+function Plank({
+  label,
+  span,
   tally,
-  year,
 }: {
-  mini: boolean;
-  tally: YearTally | undefined;
-  year: string;
+  label: string;
+  span: string | null;
+  tally: Tally | undefined;
 }) {
   return (
-    <div className="shelf-label">
-      <span className="shelf-year">{year}</span>
-      {tally && !mini ? (
-        <span>
+    <div className="shelf-plank">
+      <span className="shelf-carve shelf-carve-year">{label}</span>
+      {span ? (
+        <span className="shelf-carve shelf-carve-span">{span}</span>
+      ) : null}
+      {tally ? (
+        <span className="shelf-carve shelf-carve-tally">
           {plural(tally.volumes, "volume")} · {formatCount(tally.words)} words
         </span>
       ) : null}

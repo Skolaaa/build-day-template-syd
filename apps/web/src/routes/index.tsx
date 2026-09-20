@@ -13,6 +13,7 @@ import { TagLink } from "#/components/journal/tag-link";
 import { BlurFade } from "#/components/motion/blur-fade";
 import { PageHeader } from "#/components/page-header";
 import { Bookcase } from "#/components/shelf/bookcase";
+import { SavedShelfOrderToggle } from "#/components/shelf/order-toggle";
 import { Button } from "#/components/ui/button";
 import { Welcome } from "#/components/welcome";
 import { getShelfFn } from "#/server/journal";
@@ -39,6 +40,11 @@ function ShelfPage() {
   return (
     <main className="page-wrap rise-in px-4 pt-10 pb-8">
       <PageHeader
+        actions={
+          volumes.length > 0 ? (
+            <SavedShelfOrderToggle settings={settings} />
+          ) : undefined
+        }
         className="mb-6"
         description={
           stats.entries === 0 ? undefined : (
@@ -61,7 +67,11 @@ function ShelfPage() {
         <EmptyShelf />
       ) : (
         <>
-          <Bookcase currentPeriodKey={currentPeriodKey} volumes={volumes} />
+          <Bookcase
+            currentPeriodKey={currentPeriodKey}
+            order={settings.shelfOrder}
+            volumes={volumes}
+          />
 
           <nav
             aria-label="From the shelf"

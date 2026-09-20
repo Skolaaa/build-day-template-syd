@@ -23,7 +23,12 @@ import {
   updateMedia,
   updateSettings,
 } from "./journal.ts";
-import { type EntryInput, type MediaRef, mediaKeyFor } from "./shared.ts";
+import {
+  type EntryInput,
+  type JournalSettings,
+  type MediaRef,
+  mediaKeyFor,
+} from "./shared.ts";
 
 let server: MongoMemoryServer;
 let client: MongoClient;
@@ -131,12 +136,37 @@ describe("entries", () => {
 });
 
 describe("settings", () => {
-  test("defaults to monthly volumes and persists a change", async () => {
-    expect(await getSettings(db, ALICE)).toEqual({ volumePeriod: "month" });
-    await updateSettings(db, ALICE, { volumePeriod: "week" });
-    expect(await getSettings(db, ALICE)).toEqual({ volumePeriod: "week" });
-    await updateSettings(db, ALICE, { volumePeriod: "month" });
-    expect(await getSettings(db, BOB)).toEqual({ volumePeriod: "month" });
+  test("defaults to monthly volumes, newest year up, and persists a change", async () => {
+    const defaults: JournalSettings = {
+      shelfOrder: "newest",
+      volumePeriod: "month",
+    };
+    expect(await getSettings(db, ALICE)).toEqual(defaults);
+    await updateSettings(db, ALICE, {
+      shelfOrder: "oldest",
+      volumePeriod: "week",
+    });
+    expect(await getSettings(db, ALICE)).toEqual({
+      shelfOrder: "oldest",
+      volumePeriod: "week",
+    });
+    await updateSettings(db, ALICE, defaults);
+    expect(await getSettings(db, BOB)).toEqual(defaults);
+  });
+
+  test("a settings document from before the shelf could be turned reads as newest up", async () => {
+    await db
+      .collection("settings")
+      .updateOne(
+        { userId: BOB },
+        { $set: { volumePeriod: "year" }, $unset: { shelfOrder: "" } },
+        { upsert: true }
+      );
+    expect(await getSettings(db, BOB)).toEqual({
+      shelfOrder: "newest",
+      volumePeriod: "year",
+    });
+    await db.collection("settings").deleteOne({ userId: BOB });
   });
 });
 

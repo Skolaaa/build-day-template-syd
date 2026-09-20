@@ -26,6 +26,15 @@ export function isVolumePeriod(value: unknown): value is VolumePeriod {
   return (VOLUME_PERIODS as readonly unknown[]).includes(value);
 }
 
+/** Which year sits on the top shelf of the bookcase. */
+export const SHELF_ORDERS = ["newest", "oldest"] as const;
+export type ShelfOrder = (typeof SHELF_ORDERS)[number];
+export const DEFAULT_SHELF_ORDER: ShelfOrder = "newest";
+
+export function isShelfOrder(value: unknown): value is ShelfOrder {
+  return (SHELF_ORDERS as readonly unknown[]).includes(value);
+}
+
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const YEAR_KEY = /^\d{4}$/;
 const MONTH_KEY = /^\d{4}-(0[1-9]|1[0-2])$/;
@@ -165,6 +174,29 @@ export function periodShortLabel(periodKey: string): string {
  * foot. A month volume reads "September" over "2023", not "September 2023"
  * squeezed against the bands.
  */
+/**
+ * What a plank is engraved with when a year does not fit on one shelf: the
+ * stretch of it that stands there, "Jan – Jun" or "W1 – W26". Year volumes
+ * give the years themselves, "2019 – 2026".
+ */
+export function periodSpanLabel(first: string, last: string): string {
+  const from = periodEdgeLabel(first);
+  const to = periodEdgeLabel(last);
+  return from === to ? from : `${from} – ${to}`;
+}
+
+function periodEdgeLabel(periodKey: string): string {
+  const granularity = granularityOf(periodKey);
+  if (granularity === "year") {
+    return periodKey;
+  }
+  if (granularity === "month") {
+    return format(parseIsoDate(`${periodKey}-01`), "MMM");
+  }
+  const [, week] = periodKey.split("-W");
+  return `W${Number(week)}`;
+}
+
 export function spineFaceFor(volume: {
   named: boolean;
   periodKey: string;
@@ -576,6 +608,7 @@ export interface VolumeMetaInput {
 }
 
 export interface JournalSettings {
+  shelfOrder: ShelfOrder;
   volumePeriod: VolumePeriod;
 }
 

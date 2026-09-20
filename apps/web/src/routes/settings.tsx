@@ -3,6 +3,7 @@ import {
   periodKeyFor,
   plural,
   type Shelf,
+  type ShelfOrder,
   VOLUME_PERIODS,
   type VolumePeriod,
 } from "@repo/mongo/shared";
@@ -12,6 +13,7 @@ import { toast } from "sonner";
 import { JournalError, Loading } from "#/components/journal/states";
 import { PageHeader } from "#/components/page-header";
 import { Bookcase } from "#/components/shelf/bookcase";
+import { ShelfOrderToggle } from "#/components/shelf/order-toggle";
 import { ThemeSwitcher } from "#/components/theme-switcher";
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
@@ -51,18 +53,26 @@ function SettingsPage() {
   const { settings, previews, today } = Route.useLoaderData();
   const router = useRouter();
   const [period, setPeriod] = useState<VolumePeriod>(settings.volumePeriod);
+  const [order, setOrder] = useState<ShelfOrder>(settings.shelfOrder);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const preview: Shelf = previews[period];
-  const dirty = period !== settings.volumePeriod;
+  const dirty =
+    period !== settings.volumePeriod || order !== settings.shelfOrder;
 
   const save = async () => {
     setSaving(true);
     setError(null);
     try {
-      await updateSettingsFn({ data: { volumePeriod: period } });
+      await updateSettingsFn({
+        data: { shelfOrder: order, volumePeriod: period },
+      });
       await router.invalidate();
-      toast.success(`The shelf is now divided by ${period}.`);
+      toast.success(
+        period === settings.volumePeriod
+          ? "The shelf has been turned over."
+          : `The shelf is now divided by ${period}.`
+      );
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "The setting could not be saved."
@@ -76,7 +86,7 @@ function SettingsPage() {
     <main className="page-wrap rise-in px-4 py-10">
       <PageHeader
         crumbs={[{ label: "The shelf", to: "/" }, { label: "Settings" }]}
-        description="Two things to decide: how long a volume is, and what light to read by."
+        description="How long a volume is, which year sits on top, and what light to read by."
         title="Settings"
       />
 
@@ -121,6 +131,19 @@ function SettingsPage() {
           ))}
         </RadioGroup>
 
+        <div className="mt-8 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 className="m-0 font-serif text-[19px] text-ink">
+              Which year is on top
+            </h3>
+            <p className="m-0 mt-1 max-w-[52ch] text-[13px] text-ink-soft">
+              The years stack in one case. Keep this year at eye level, or read
+              the case from the beginning down.
+            </p>
+          </div>
+          <ShelfOrderToggle onChange={setOrder} value={order} />
+        </div>
+
         <div className="mt-6">
           <p className="kicker mb-1">Preview</p>
           {preview.volumes.length === 0 ? (
@@ -131,6 +154,7 @@ function SettingsPage() {
             <Bookcase
               currentPeriodKey={periodKeyFor(today, period)}
               mini
+              order={order}
               volumes={preview.volumes}
             />
           )}
