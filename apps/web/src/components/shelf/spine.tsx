@@ -2,6 +2,7 @@ import {
   formatCount,
   formatShortDate,
   periodLabel,
+  periodShortLabel,
   plural,
   SPINE_INK_DARK,
   spineFaceFor,
@@ -208,7 +209,7 @@ export function UnopenedSpine({
     >
       <Plus aria-hidden="true" className="size-3.5" />
       <span className="spine-title">unopened</span>
-      <span className="spine-year">{periodLabel(periodKey)}</span>
+      <span className="spine-year">{periodShortLabel(periodKey)}</span>
     </button>
   );
 }

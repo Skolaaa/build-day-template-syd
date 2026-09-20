@@ -4,7 +4,7 @@ import { Compass, Film, Library } from "lucide-react";
 import { Bookcase } from "#/components/shelf/bookcase";
 import { Button } from "#/components/ui/button";
 
-/** Sixteen months of a plausible journal, so the door shows what is behind it. */
+/** Fifteen months of a plausible journal, so the door shows what is behind it. */
 const SAMPLE: {
   entries: number;
   key: string;
@@ -92,7 +92,7 @@ export function Welcome() {
       </section>
 
       <div aria-hidden="true" className="mt-12 select-none" inert>
-        <Bookcase currentPeriodKey="2026-01" volumes={SAMPLE_VOLUMES} />
+        <Bookcase currentPeriodKey="2025-12" volumes={SAMPLE_VOLUMES} />
       </div>
 
       <section className="mt-4 grid gap-8 border-rule border-t pt-10 sm:grid-cols-3">
