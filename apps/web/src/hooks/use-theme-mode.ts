@@ -1,27 +1,15 @@
-import { Monitor, Moon, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Button } from "#/components/ui/button";
 
-type ThemeMode = "light" | "dark" | "auto";
+export type ThemeMode = "light" | "dark" | "auto";
 
-const NEXT_MODE: Record<ThemeMode, ThemeMode> = {
-  auto: "light",
-  dark: "auto",
-  light: "dark",
-};
+const THEME_EVENT = "life-on-a-shelf:theme";
 
 // Light and dark are "day" and "night" here: lamplight on the same shelf.
-const MODE_LABEL: Record<ThemeMode, string> = {
-  auto: "Auto",
+export const MODE_LABEL: Record<ThemeMode, string> = {
+  auto: "Follow the system",
   dark: "Night",
   light: "Day",
 };
-
-const MODE_ICON = {
-  auto: Monitor,
-  dark: Moon,
-  light: Sun,
-} as const;
 
 function resolveTheme(mode: ThemeMode, prefersDark: boolean): "light" | "dark" {
   if (mode === "auto") {
@@ -59,7 +47,7 @@ export function applyThemeMode(mode: ThemeMode) {
   document.documentElement.style.colorScheme = resolved;
 }
 
-/** The saved mode, kept in sync with the toggle and the OS. */
+/** The saved mode, kept in sync with every switcher on the page and the OS. */
 export function useThemeMode(): [ThemeMode, (mode: ThemeMode) => void] {
   const [mode, setMode] = useState<ThemeMode>("auto");
 
@@ -72,8 +60,14 @@ export function useThemeMode(): [ThemeMode, (mode: ThemeMode) => void] {
         setMode(getInitialMode());
       }
     };
+    // Two switchers on one page (header and settings) hear each other this way.
+    const onLocalChange = () => setMode(getInitialMode());
     window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
+    window.addEventListener(THEME_EVENT, onLocalChange);
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener(THEME_EVENT, onLocalChange);
+    };
   }, []);
 
   useEffect(() => {
@@ -96,32 +90,8 @@ export function useThemeMode(): [ThemeMode, (mode: ThemeMode) => void] {
     setMode(next);
     applyThemeMode(next);
     window.localStorage.setItem("theme", next);
+    window.dispatchEvent(new CustomEvent(THEME_EVENT));
   };
 
   return [mode, change];
-}
-
-export default function ThemeToggle() {
-  const [mode, setMode] = useThemeMode();
-
-  const label =
-    mode === "auto"
-      ? "Theme: auto (follows the system). Click for day."
-      : `Theme: ${MODE_LABEL[mode].toLowerCase()}. Click to change.`;
-
-  const ModeIcon = MODE_ICON[mode];
-
-  return (
-    <Button
-      aria-label={label}
-      onClick={() => setMode(NEXT_MODE[mode])}
-      size="sm"
-      title={label}
-      type="button"
-      variant="outline"
-    >
-      <ModeIcon />
-      {MODE_LABEL[mode]}
-    </Button>
-  );
 }

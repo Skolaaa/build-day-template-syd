@@ -1,10 +1,13 @@
+import { Show } from "@clerk/tanstack-react-start";
 import { TanStackDevtools } from "@tanstack/react-devtools";
 import { createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
+import { MotionConfig } from "motion/react";
 import { TooltipProvider } from "#/components/ui/tooltip";
 import Footer from "../components/footer";
 import Header from "../components/header";
 import SearchPalette from "../components/journal/search-palette";
+import { MobileTabBar } from "../components/mobile-tab-bar";
 import ThemedToaster from "../components/themed-toaster";
 
 import ClerkProvider from "../integrations/clerk/provider";
@@ -24,7 +27,7 @@ export const Route = createRootRoute({
       },
       {
         name: "viewport",
-        content: "width=device-width, initial-scale=1",
+        content: "width=device-width, initial-scale=1, viewport-fit=cover",
       },
       {
         title: "Life on a Shelf",
@@ -54,25 +57,30 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body className="paper-grain flex min-h-dvh flex-col font-sans antialiased [overflow-wrap:anywhere] selection:bg-accent/25">
         <ClerkProvider>
-          <TooltipProvider>
-            <Header />
-            {/* flex-1 pushes the footer to the bottom on short pages. */}
-            <div className="flex-1 pb-20">{children}</div>
-            <Footer />
-            <SearchPalette />
-            <ThemedToaster />
-            <TanStackDevtools
-              config={{
-                position: "bottom-right",
-              }}
-              plugins={[
-                {
-                  name: "Tanstack Router",
-                  render: <TanStackRouterDevtoolsPanel />,
-                },
-              ]}
-            />
-          </TooltipProvider>
+          <MotionConfig reducedMotion="user">
+            <TooltipProvider>
+              <Header />
+              {/* flex-1 pushes the footer to the bottom on short pages. */}
+              <div className="flex-1 pb-16 md:pb-20">{children}</div>
+              <Footer />
+              <Show when="signed-in">
+                <MobileTabBar />
+              </Show>
+              <SearchPalette />
+              <ThemedToaster />
+              <TanStackDevtools
+                config={{
+                  position: "bottom-right",
+                }}
+                plugins={[
+                  {
+                    name: "Tanstack Router",
+                    render: <TanStackRouterDevtoolsPanel />,
+                  },
+                ]}
+              />
+            </TooltipProvider>
+          </MotionConfig>
         </ClerkProvider>
         <Scripts />
       </body>

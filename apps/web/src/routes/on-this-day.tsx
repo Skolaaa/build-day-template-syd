@@ -4,8 +4,12 @@ import {
   type VolumePeriod,
 } from "@repo/mongo/shared";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { EntryRow } from "#/components/journal/entry-row";
-import { JournalError, Loading } from "#/components/journal/states";
+import { CalendarClock, PenLine } from "lucide-react";
+import { EntryList, EntryRow } from "#/components/journal/entry-row";
+import { EmptyNote, JournalError, Loading } from "#/components/journal/states";
+import { BlurFade } from "#/components/motion/blur-fade";
+import { PageHeader } from "#/components/page-header";
+import { Button } from "#/components/ui/button";
 import { getOnThisDayFn } from "#/server/journal";
 
 export const Route = createFileRoute("/on-this-day")({
@@ -27,6 +31,8 @@ const LOOKS_BACK: Record<VolumePeriod, string> = {
   year: "The same date, in earlier years.",
 };
 
+const STAGGER = 0.06;
+
 function ago(periodsAgo: number, period: VolumePeriod): string {
   const unit = UNIT[period];
   if (periodsAgo === 1) {
@@ -46,40 +52,54 @@ function OnThisDayPage() {
 
   return (
     <main className="page-wrap rise-in px-4 py-10">
-      <Link
-        className="mb-5 inline-flex items-center gap-1.5 font-serif text-[14px] text-ink-soft no-underline hover:text-accent"
-        to="/"
-      >
-        ← The shelf
-      </Link>
-      <p className="kicker mb-2">{formatLongDate(today)}</p>
-      <h1 className="display-title mb-2 text-[clamp(30px,5vw,44px)] text-ink">
-        On this day
-      </h1>
-      <p className="mb-9 max-w-[60ch] text-ink-soft">
-        {LOOKS_BACK[settings.volumePeriod]} Change how the shelf is divided in
-        settings and this looks back differently.
-      </p>
+      <PageHeader
+        crumbs={[{ label: "The shelf", to: "/" }, { label: "On this day" }]}
+        description={
+          <>
+            {LOOKS_BACK[settings.volumePeriod]} Change how the shelf is divided
+            in{" "}
+            <Link
+              className="text-ink underline underline-offset-3"
+              to="/settings"
+            >
+              settings
+            </Link>{" "}
+            and this looks back differently.
+          </>
+        }
+        kicker={formatLongDate(today)}
+        title="On this day"
+      />
 
       {hits.length === 0 ? (
-        <p className="max-w-[52ch] font-serif text-[18px] text-ink-faint">
-          Nothing yet. This page fills in on its own once the journal has some
-          history behind it; write today and next {UNIT[settings.volumePeriod]}{" "}
-          it will be here.
-        </p>
+        <EmptyNote
+          action={
+            <Button asChild>
+              <Link to="/write">
+                <PenLine data-icon="inline-start" />
+                Write today
+              </Link>
+            </Button>
+          }
+          description={`This page fills in on its own once the journal has some history behind it. Write today and next ${UNIT[settings.volumePeriod]} it will be here.`}
+          icon={<CalendarClock />}
+          title="Nothing yet"
+        />
       ) : (
         <div className="flex flex-col gap-9">
-          {[...groups.entries()].map(([periodsAgo, list]) => (
-            <section key={periodsAgo}>
-              <h2 className="section-heading">
-                {ago(periodsAgo, settings.volumePeriod)}
-              </h2>
-              <ul className="m-0 list-none p-0">
-                {list.map((hit) => (
-                  <EntryRow entry={hit} fullDate key={hit.id} />
-                ))}
-              </ul>
-            </section>
+          {[...groups.entries()].map(([periodsAgo, list], index) => (
+            <BlurFade delay={index * STAGGER} key={periodsAgo}>
+              <section>
+                <h2 className="section-heading">
+                  {ago(periodsAgo, settings.volumePeriod)}
+                </h2>
+                <EntryList>
+                  {list.map((hit) => (
+                    <EntryRow entry={hit} fullDate key={hit.id} />
+                  ))}
+                </EntryList>
+              </section>
+            </BlurFade>
           ))}
         </div>
       )}

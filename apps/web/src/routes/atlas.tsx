@@ -1,11 +1,11 @@
 import {
-  formatCount,
-  formatLongDate,
   formatMonthYear,
+  formatShortDate,
   MOOD_LABELS,
   plural,
 } from "@repo/mongo/shared";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { Compass, PenLine } from "lucide-react";
 import { Bars, MoodLine, VizCard } from "#/components/atlas/charts";
 import {
   GRID_GRANULARITIES,
@@ -13,8 +13,11 @@ import {
   LifeGrid,
   useGridGranularity,
 } from "#/components/atlas/life-grid";
-import { JournalError, Loading } from "#/components/journal/states";
-import { StreakLine } from "#/components/journal/streak-line";
+import { StatTiles } from "#/components/journal/stat-tiles";
+import { EmptyNote, JournalError, Loading } from "#/components/journal/states";
+import { BlurFade } from "#/components/motion/blur-fade";
+import { PageHeader } from "#/components/page-header";
+import { Button } from "#/components/ui/button";
 import { getAtlasFn } from "#/server/journal";
 
 export const Route = createFileRoute("/atlas")({
@@ -26,7 +29,11 @@ export const Route = createFileRoute("/atlas")({
 
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const TAGS_SHOWN = 12;
-const HOURS_IN_DAY = 24;
+const CARD_STAGGER = 0.05;
+const CRUMBS = [
+  { label: "The shelf", to: "/" as const },
+  { label: "The atlas" },
+];
 
 /** "9am", "midnight": an hour as a person says it. */
 function hourLabel(hour: number): string {
@@ -57,16 +64,24 @@ function AtlasPage() {
   if (stats.entries === 0) {
     return (
       <main className="page-wrap rise-in px-4 py-10">
-        <h1 className="display-title mb-3 text-[clamp(30px,5vw,44px)] text-ink">
-          The atlas
-        </h1>
-        <p className="max-w-[52ch] font-serif text-[18px] text-ink-faint">
-          A map needs some ground first. Once there are pages on the shelf, this
-          reads the whole journal back as a picture.
-        </p>
-        <Link className="text-accent" to="/write">
-          Write today
-        </Link>
+        <PageHeader
+          crumbs={CRUMBS}
+          description="The whole journal read back as a picture."
+          title="The atlas"
+        />
+        <EmptyNote
+          action={
+            <Button asChild>
+              <Link to="/write">
+                <PenLine data-icon="inline-start" />
+                Write today
+              </Link>
+            </Button>
+          }
+          description="A map needs some ground first. Once there are pages on the shelf, this reads the whole journal back as a picture."
+          icon={<Compass />}
+          title="Nothing to draw yet"
+        />
       </main>
     );
   }
@@ -95,105 +110,127 @@ function AtlasPage() {
 
   return (
     <main className="page-wrap rise-in px-4 py-10">
-      <Link
-        className="mb-5 inline-flex items-center gap-1.5 font-serif text-[14px] text-ink-soft no-underline hover:text-accent"
-        to="/"
-      >
-        ← The shelf
-      </Link>
-      <h1 className="display-title mb-2 text-[clamp(30px,5vw,44px)] text-ink">
-        The atlas
-      </h1>
-      <p className="mb-8 max-w-[60ch] text-ink-soft">
-        The whole journal read back as a picture.
-      </p>
+      <PageHeader
+        crumbs={CRUMBS}
+        description="The whole journal read back as a picture."
+        title="The atlas"
+      />
 
-      <p className="mb-10 max-w-[58ch] font-serif text-[clamp(20px,2.6vw,26px)] text-ink leading-[1.45]">
-        {formatCount(stats.words)} words on {plural(stats.entries, "page")},
-        bound into {plural(stats.volumes, "volume")} by {settings.volumePeriod}
-        {stats.firstEntry ? (
-          <>, starting {formatLongDate(stats.firstEntry)}</>
-        ) : null}
-        .{" "}
-        <span className="text-ink-soft">
-          <StreakLine stats={stats} />
-        </span>
-      </p>
+      <section className="mb-10">
+        <StatTiles
+          stats={[
+            {
+              hint: `on ${plural(stats.entries, "page")}`,
+              label: "Words",
+              value: stats.words,
+            },
+            {
+              hint: `bound by ${settings.volumePeriod}`,
+              label: "Volumes",
+              value: stats.volumes,
+            },
+            {
+              hint: stats.firstEntry
+                ? `since ${formatShortDate(stats.firstEntry)}`
+                : undefined,
+              label: "Days written",
+              value: stats.daysWritten,
+            },
+            {
+              hint: "days in a row",
+              label: "Longest run",
+              value: stats.longestStreak,
+            },
+          ]}
+        />
+      </section>
 
       <div className="flex flex-col gap-6">
-        <VizCard
-          subtitle="Words per volume, the way the spines show it on the shelf."
-          title="Thickness of each volume"
-        >
-          <Bars
-            data={volumes}
-            describe={(v) => `${formatCount(v)} words`}
-            interval="preserveStartEnd"
-          />
-        </VizCard>
+        <BlurFade>
+          <VizCard
+            subtitle="Words per volume, the way the spines show it on the shelf."
+            title="Thickness of each volume"
+          >
+            <Bars
+              data={volumes}
+              describe={(v) => `${formatCountWords(v)}`}
+              interval="preserveStartEnd"
+            />
+          </VizCard>
+        </BlurFade>
 
-        <VizCard
-          aside={<GrainPicker onChange={setGrain} value={grain} />}
-          subtitle={`One cell per ${grain}, darker where more was written.`}
-          title={
-            GRID_GRANULARITIES.find((g) => g.key === grain)?.title ??
-            "A life in weeks"
-          }
-        >
-          <LifeGrid
-            days={atlas.days}
-            granularity={grain}
-            months={atlas.months}
-            today={today}
-            weeks={atlas.weeks}
-          />
-        </VizCard>
+        <BlurFade delay={CARD_STAGGER}>
+          <VizCard
+            aside={<GrainPicker onChange={setGrain} value={grain} />}
+            subtitle={`One cell per ${grain}, darker where more was written.`}
+            title={
+              GRID_GRANULARITIES.find((g) => g.key === grain)?.title ??
+              "A life in weeks"
+            }
+          >
+            <LifeGrid
+              days={atlas.days}
+              granularity={grain}
+              months={atlas.months}
+              today={today}
+              weeks={atlas.weeks}
+            />
+          </VizCard>
+        </BlurFade>
 
         <div className="grid gap-6 md:grid-cols-2">
-          <VizCard
-            subtitle={
-              hasMoods
-                ? "The average of what you said you felt, month by month."
-                : "Mark how days felt and this fills in."
-            }
-            title="Mood by month"
-          >
-            {hasMoods ? <MoodLine data={months} describe={moodWord} /> : null}
-          </VizCard>
-          <VizCard
-            subtitle={
-              hasHours
-                ? "When pages get started, by the clock you wrote on."
-                : "Recorded from now on, as pages are started."
-            }
-            title="Hour of the day"
-          >
-            {hasHours ? (
-              <Bars
-                data={hours}
-                describe={(v) => plural(v, "page")}
-                interval={Math.floor(HOURS_IN_DAY / 8) - 1}
-              />
-            ) : null}
-          </VizCard>
-          <VizCard
-            subtitle="Which days of the week get written on."
-            title="Days of the week"
-          >
-            <Bars data={weekdays} describe={(v) => plural(v, "page")} />
-          </VizCard>
-          <VizCard
-            subtitle="The tags that come up most."
-            title="What it keeps coming back to"
-          >
-            {tags.length > 0 ? (
-              <Bars data={tags} describe={(v) => plural(v, "page")} />
-            ) : (
-              <p className="m-0 text-[14px] text-ink-faint">No tags yet.</p>
-            )}
-          </VizCard>
+          <BlurFade>
+            <VizCard
+              subtitle={
+                hasMoods
+                  ? "The average of what you said you felt, month by month."
+                  : "Mark how days felt and this fills in."
+              }
+              title="Mood by month"
+            >
+              {hasMoods ? <MoodLine data={months} describe={moodWord} /> : null}
+            </VizCard>
+          </BlurFade>
+          <BlurFade delay={CARD_STAGGER}>
+            <VizCard
+              subtitle={
+                hasHours
+                  ? "When pages get started, by the clock you wrote on."
+                  : "Recorded from now on, as pages are started."
+              }
+              title="Hour of the day"
+            >
+              {hasHours ? (
+                <Bars data={hours} describe={(v) => plural(v, "page")} />
+              ) : null}
+            </VizCard>
+          </BlurFade>
+          <BlurFade>
+            <VizCard
+              subtitle="Which days of the week get written on."
+              title="Days of the week"
+            >
+              <Bars data={weekdays} describe={(v) => plural(v, "page")} />
+            </VizCard>
+          </BlurFade>
+          <BlurFade delay={CARD_STAGGER}>
+            <VizCard
+              subtitle="The tags that come up most."
+              title="What it keeps coming back to"
+            >
+              {tags.length > 0 ? (
+                <Bars data={tags} describe={(v) => plural(v, "page")} />
+              ) : (
+                <p className="m-0 text-[14px] text-ink-faint">No tags yet.</p>
+              )}
+            </VizCard>
+          </BlurFade>
         </div>
       </div>
     </main>
   );
+}
+
+function formatCountWords(value: number): string {
+  return plural(value, "word");
 }

@@ -13,12 +13,17 @@ import {
   type VolumePeriod,
 } from "@repo/mongo/shared";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { ChevronLeft, ChevronRight, Palette, PenLine } from "lucide-react";
 import { type CSSProperties, useState } from "react";
 import { CalendarHeatmap } from "#/components/journal/calendar-heatmap";
-import { EntryRow } from "#/components/journal/entry-row";
+import { EntryList, EntryRow } from "#/components/journal/entry-row";
+import { type Stat, StatTiles } from "#/components/journal/stat-tiles";
 import { JournalError, Loading } from "#/components/journal/states";
+import { BlurFade } from "#/components/motion/blur-fade";
+import { PageBreadcrumb } from "#/components/page-header";
 import { Button } from "#/components/ui/button";
-import { CoverEditor } from "#/components/volume/cover-editor";
+import { ButtonGroup } from "#/components/ui/button-group";
+import { CoverEditorDialog } from "#/components/volume/cover-editor";
 import { getVolumeFn } from "#/server/journal";
 
 export const Route = createFileRoute("/volume/$periodKey")({
@@ -38,6 +43,8 @@ export const Route = createFileRoute("/volume/$periodKey")({
   ),
 });
 
+const GROUP_STAGGER = 0.05;
+
 function VolumePage() {
   const { volume, entries, calendar, settings, today } = Route.useLoaderData();
   const [naming, setNaming] = useState(false);
@@ -52,79 +59,88 @@ function VolumePage() {
 
   return (
     <main className="page-wrap rise-in px-4 py-10">
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <Link
-          className="inline-flex items-center gap-1.5 font-serif text-[14px] text-ink-soft no-underline hover:text-accent"
-          to="/"
-        >
-          ← The shelf
-        </Link>
-        <div className="flex gap-3 text-[13px]">
-          <Link
-            className="text-ink-faint no-underline hover:text-accent"
-            params={{ periodKey: previous }}
-            to="/volume/$periodKey"
-          >
-            ← {periodLabel(previous)}
-          </Link>
-          <Link
-            className="text-ink-faint no-underline hover:text-accent"
-            params={{ periodKey: next }}
-            to="/volume/$periodKey"
-          >
-            {periodLabel(next)} →
-          </Link>
-        </div>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <PageBreadcrumb
+          crumbs={[
+            { label: "The shelf", to: "/" },
+            { label: periodLabel(volume.periodKey) },
+          ]}
+        />
+        <ButtonGroup aria-label="Neighbouring volumes">
+          <Button asChild size="sm" variant="outline">
+            <Link params={{ periodKey: previous }} to="/volume/$periodKey">
+              <ChevronLeft data-icon="inline-start" />
+              {periodLabel(previous)}
+            </Link>
+          </Button>
+          <Button asChild size="sm" variant="outline">
+            <Link params={{ periodKey: next }} to="/volume/$periodKey">
+              {periodLabel(next)}
+              <ChevronRight data-icon="inline-end" />
+            </Link>
+          </Button>
+        </ButtonGroup>
       </div>
 
       <VolumePlate
         isCurrent={isCurrent}
-        naming={naming}
-        onToggleNaming={() => setNaming((v) => !v)}
+        onName={() => setNaming(true)}
         shelfPeriod={settings.volumePeriod}
         volume={volume}
       />
 
-      {naming ? (
-        <CoverEditor
-          color={volume.color}
-          entries={volume.entries}
-          onDone={() => setNaming(false)}
-          periodKey={volume.periodKey}
-          subtitle={volume.subtitle}
-          title={volume.named ? volume.title : ""}
-        />
-      ) : null}
+      <CoverEditorDialog
+        color={volume.color}
+        entries={volume.entries}
+        onOpenChange={setNaming}
+        open={naming}
+        periodKey={volume.periodKey}
+        subtitle={volume.subtitle}
+        title={volume.named ? volume.title : ""}
+      />
 
-      <section className="panel mb-10 overflow-x-auto p-5">
-        <CalendarHeatmap
-          calendar={calendar}
-          granularity={volume.granularity}
-          periodKey={volume.periodKey}
-          today={today}
-        />
-      </section>
+      <BlurFade>
+        <section className="panel mb-10 grid gap-8 p-5 md:grid-cols-2 md:items-start">
+          <div className="min-w-0">
+            <h2 className="section-heading">Days written</h2>
+            <div className="overflow-x-auto pb-1">
+              <CalendarHeatmap
+                calendar={calendar}
+                granularity={volume.granularity}
+                periodKey={volume.periodKey}
+                today={today}
+              />
+            </div>
+          </div>
+          <div className="min-w-0">
+            <h2 className="section-heading">In figures</h2>
+            <StatTiles className="sm:grid-cols-2" stats={figuresFor(volume)} />
+          </div>
+        </section>
+      </BlurFade>
 
       {entries.length === 0 ? null : (
         <div className="flex flex-col gap-8">
-          {groups.map((group) => (
-            <section key={group.label ?? "all"}>
-              {group.label ? (
-                <h2 className="m-0 mb-1.5 flex items-baseline justify-between gap-3 border-rule border-b pb-2 font-serif text-[22px] text-ink">
-                  {group.label}
-                  <span className="font-sans text-[12px] text-ink-faint uppercase tracking-[0.06em]">
-                    {plural(group.entries.length, "page")}
-                  </span>
-                </h2>
-              ) : (
-                <h2 className="section-heading">Pages, newest first</h2>
-              )}
-              <ul className="m-0 list-none p-0">
-                {group.entries.map((entry) => (
-                  <EntryRow entry={entry} key={entry.id} />
-                ))}
-              </ul>
-            </section>
+          {groups.map((group, index) => (
+            <BlurFade delay={index * GROUP_STAGGER} key={group.label ?? "all"}>
+              <section>
+                {group.label ? (
+                  <h2 className="m-0 mb-1.5 flex items-baseline justify-between gap-3 border-rule border-b pb-2 font-serif text-[22px] text-ink">
+                    {group.label}
+                    <span className="font-sans text-[12px] text-ink-faint uppercase tracking-[0.06em]">
+                      {plural(group.entries.length, "page")}
+                    </span>
+                  </h2>
+                ) : (
+                  <h2 className="section-heading">Pages, newest first</h2>
+                )}
+                <EntryList>
+                  {group.entries.map((entry) => (
+                    <EntryRow entry={entry} key={entry.id} />
+                  ))}
+                </EntryList>
+              </section>
+            </BlurFade>
           ))}
         </div>
       )}
@@ -132,10 +148,26 @@ function VolumePage() {
   );
 }
 
+function figuresFor(volume: Volume): Stat[] {
+  const span =
+    volume.firstEntry && volume.lastEntry
+      ? `${formatShortDate(volume.firstEntry)}${
+          volume.firstEntry === volume.lastEntry
+            ? ""
+            : ` to ${formatShortDate(volume.lastEntry)}`
+        }`
+      : undefined;
+  return [
+    { label: "Pages", value: volume.entries },
+    { label: "Words", value: volume.words },
+    { label: "Clips", value: volume.mediaCount },
+    { hint: span, label: "Days written", value: volume.daysWritten },
+  ];
+}
+
 interface VolumePlateProps {
   isCurrent: boolean;
-  naming: boolean;
-  onToggleNaming: () => void;
+  onName: () => void;
   shelfPeriod: VolumePeriod;
   volume: Volume;
 }
@@ -144,8 +176,7 @@ interface VolumePlateProps {
 function VolumePlate({
   volume,
   isCurrent,
-  naming,
-  onToggleNaming,
+  onName,
   shelfPeriod,
 }: VolumePlateProps) {
   const style = { "--volume-color": volume.color } as CSSProperties;
@@ -166,7 +197,7 @@ function VolumePlate({
           {volume.subtitle}
         </p>
       ) : null}
-      <p className="mt-3.5 mb-2 text-[13.5px] text-ink-faint leading-7">
+      <p className="mt-3.5 mb-3 text-[13.5px] text-ink-faint leading-7">
         {volume.entries === 0 ? (
           emptyLine(isCurrent)
         ) : (
@@ -181,17 +212,16 @@ function VolumePlate({
         )}
       </p>
       <div className="flex flex-wrap gap-2">
-        <Button
-          onClick={onToggleNaming}
-          size="sm"
-          type="button"
-          variant="outline"
-        >
-          {namingLabel(naming, volume.named)}
+        <Button onClick={onName} size="sm" type="button" variant="outline">
+          <Palette data-icon="inline-start" />
+          {volume.named ? "Rename or recolour" : "Name this volume"}
         </Button>
         {isCurrent ? (
           <Button asChild size="sm">
-            <Link to="/write">Write today</Link>
+            <Link to="/write">
+              <PenLine data-icon="inline-start" />
+              Write today
+            </Link>
           </Button>
         ) : null}
       </div>
@@ -205,27 +235,11 @@ function emptyLine(isCurrent: boolean): string {
     : "Nothing was written in this volume.";
 }
 
-function namingLabel(naming: boolean, named: boolean): string {
-  if (naming) {
-    return "Close";
-  }
-  return named ? "Rename or recolour" : "Name this volume";
-}
-
 function VolumeSummary({ volume }: { volume: Volume }) {
-  const span =
-    volume.firstEntry && volume.lastEntry
-      ? ` · ${formatShortDate(volume.firstEntry)}${
-          volume.firstEntry === volume.lastEntry
-            ? ""
-            : ` to ${formatShortDate(volume.lastEntry)}`
-        }`
-      : "";
   return (
     <>
       {plural(volume.entries, "page")} · {formatCount(volume.words)} words
       {volume.mediaCount > 0 ? ` · ${plural(volume.mediaCount, "clip")}` : ""}
-      {span}
     </>
   );
 }

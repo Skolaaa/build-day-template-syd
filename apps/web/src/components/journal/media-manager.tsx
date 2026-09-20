@@ -1,30 +1,37 @@
 import {
   CAPTION_MAX_LENGTH,
   type Entry,
-  isMediaContentType,
   MEDIA_MAX_BYTES,
   type MediaRef,
   mediaKindFor,
 } from "@repo/mongo/shared";
-import { ArrowDown, ArrowUp, Trash2, Upload } from "lucide-react";
 import {
-  type ChangeEvent,
-  type DragEvent,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+  ArrowDown,
+  ArrowUp,
+  CircleAlert,
+  Images,
+  Trash2,
+  Upload,
+} from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "#/components/ui/button";
-import { Input } from "#/components/ui/input";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from "#/components/ui/input-group";
+import { Item, ItemContent, ItemMedia, ItemTitle } from "#/components/ui/item";
+import { Progress } from "#/components/ui/progress";
+import { formatBytes, useFileUpload } from "#/hooks/use-file-upload";
 import { deleteMedia, posterFrameFor, uploadMedia } from "#/lib/media-upload";
 import { updateMediaFn } from "#/server/journal";
 import { MediaPlayer } from "./media-gallery";
 
 const ACCEPT =
   "video/mp4,video/webm,video/quicktime,image/jpeg,image/png,image/webp";
-const MEGABYTE = 1024 * 1024;
 const CAPTION_DEBOUNCE_MS = 700;
+const PERCENT = 100;
 
 interface PendingUpload {
   error: string | null;
@@ -50,9 +57,7 @@ export function MediaManager({
   onChange,
 }: MediaManagerProps) {
   const [uploads, setUploads] = useState<PendingUpload[]>([]);
-  const [dragging, setDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const fileInput = useRef<HTMLInputElement>(null);
   const media = entry?.media ?? [];
 
   // Preview URLs are object URLs; every one made here is revoked on unmount.
@@ -69,18 +74,6 @@ export function MediaManager({
   const startUpload = useCallback(
     async (file: File) => {
       setError(null);
-      if (!isMediaContentType(file.type)) {
-        setError(
-          `${file.name} is not a kind of file the shelf keeps (mp4, webm, mov, jpg, png, webp).`
-        );
-        return;
-      }
-      if (file.size > MEDIA_MAX_BYTES) {
-        setError(
-          `${file.name} is ${Math.round(file.size / MEGABYTE)} MB; the limit is ${MEDIA_MAX_BYTES / MEGABYTE} MB.`
-        );
-        return;
-      }
       const id = crypto.randomUUID();
       const previewUrl = URL.createObjectURL(file);
       previews.current.add(previewUrl);
@@ -104,7 +97,7 @@ export function MediaManager({
         setUploads((current) => current.filter((u) => u.id !== id));
         URL.revokeObjectURL(previewUrl);
         previews.current.delete(previewUrl);
-        if (mediaKindFor(file.type) === "video") {
+        if (mediaKindFor(result.media.contentType) === "video") {
           await attachPoster(page.id, result.media, file, onChange);
         }
       } catch (err) {
@@ -116,11 +109,8 @@ export function MediaManager({
     [ensureEntry, onChange]
   );
 
-  const onFiles = useCallback(
-    (files: FileList | null) => {
-      if (!files) {
-        return;
-      }
+  const onFilesAdded = useCallback(
+    (files: File[]) => {
       for (const file of files) {
         startUpload(file);
       }
@@ -128,22 +118,16 @@ export function MediaManager({
     [startUpload]
   );
 
-  const onDrop = useCallback(
-    (event: DragEvent<HTMLDivElement>) => {
-      event.preventDefault();
-      setDragging(false);
-      onFiles(event.dataTransfer.files);
-    },
-    [onFiles]
-  );
-
-  const onPick = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) => {
-      onFiles(event.target.files);
-      event.target.value = "";
-    },
-    [onFiles]
-  );
+  const [{ errors, isDragging }, drop] = useFileUpload({
+    accept: ACCEPT,
+    maxSize: MEDIA_MAX_BYTES,
+    multiple: true,
+    onFilesAdded,
+    rejectMessage: (file) =>
+      `${file.name} is not a kind of file the shelf keeps (mp4, webm, mov, jpg, png, webp).`,
+    sizeMessage: (file) =>
+      `${file.name} is ${formatBytes(file.size)}; the limit is ${formatBytes(MEDIA_MAX_BYTES)}.`,
+  });
 
   const remove = useCallback(
     async (item: MediaRef) => {
@@ -219,132 +203,153 @@ export function MediaManager({
     );
   }
 
+  const problems = [...errors, ...(error ? [error] : [])];
+
   return (
     <div className="flex flex-col gap-4">
       {media.map((item, index) => (
         <figure className="media-frame m-0" key={item.id}>
           <MediaPlayer item={item} />
-          <div className="flex flex-wrap items-center gap-2 p-2">
-            <Input
-              aria-label="Caption"
-              className="min-w-[200px] flex-1 font-serif italic"
-              maxLength={CAPTION_MAX_LENGTH}
-              onChange={(event) => caption(index, event.target.value)}
-              placeholder="A caption, if you like"
-              value={item.caption ?? ""}
-            />
-            <Button
-              aria-label="Move up"
-              disabled={index === 0}
-              onClick={() => move(index, -1)}
-              size="icon-sm"
-              type="button"
-              variant="ghost"
-            >
-              <ArrowUp />
-            </Button>
-            <Button
-              aria-label="Move down"
-              disabled={index === media.length - 1}
-              onClick={() => move(index, 1)}
-              size="icon-sm"
-              type="button"
-              variant="ghost"
-            >
-              <ArrowDown />
-            </Button>
-            <Button
-              aria-label="Remove"
-              onClick={() => remove(item)}
-              size="icon-sm"
-              type="button"
-              variant="ghost"
-            >
-              <Trash2 />
-            </Button>
+          <div className="p-2">
+            <InputGroup className="bg-paper-raised">
+              <InputGroupInput
+                aria-label="Caption"
+                className="font-serif italic"
+                maxLength={CAPTION_MAX_LENGTH}
+                onChange={(event) => caption(index, event.target.value)}
+                placeholder="A caption, if you like"
+                value={item.caption ?? ""}
+              />
+              <InputGroupAddon align="inline-end">
+                <InputGroupButton
+                  aria-label="Move up"
+                  disabled={index === 0}
+                  onClick={() => move(index, -1)}
+                  size="icon-xs"
+                >
+                  <ArrowUp />
+                </InputGroupButton>
+                <InputGroupButton
+                  aria-label="Move down"
+                  disabled={index === media.length - 1}
+                  onClick={() => move(index, 1)}
+                  size="icon-xs"
+                >
+                  <ArrowDown />
+                </InputGroupButton>
+                <InputGroupButton
+                  aria-label="Remove"
+                  className="text-ink-faint hover:text-accent"
+                  onClick={() => remove(item)}
+                  size="icon-xs"
+                >
+                  <Trash2 />
+                </InputGroupButton>
+              </InputGroupAddon>
+            </InputGroup>
           </div>
         </figure>
       ))}
 
       {uploads.map((upload) => (
-        <div className="media-frame p-3" key={upload.id}>
-          <div className="mb-2 flex items-center justify-between gap-3 text-[13px] text-ink-soft">
-            <span className="truncate">{upload.name}</span>
-            <span className="tabular-nums">
-              {upload.error ? "" : `${Math.round(upload.progress * 100)}%`}
-            </span>
-          </div>
-          {upload.error ? (
+        <Item className="bg-paper-raised" key={upload.id} variant="outline">
+          <ItemMedia className="text-ink-faint" variant="icon">
+            {upload.error ? (
+              <CircleAlert className="text-accent" />
+            ) : (
+              <Upload />
+            )}
+          </ItemMedia>
+          <ItemContent className="gap-2">
             <div className="flex items-center justify-between gap-3">
+              <ItemTitle className="font-normal text-ink-soft">
+                {upload.name}
+              </ItemTitle>
+              {upload.error ? (
+                <Button
+                  onClick={() =>
+                    setUploads((current) =>
+                      current.filter((u) => u.id !== upload.id)
+                    )
+                  }
+                  size="xs"
+                  type="button"
+                  variant="ghost"
+                >
+                  Dismiss
+                </Button>
+              ) : (
+                <span className="text-[12px] text-ink-faint tabular-nums">
+                  {Math.round(upload.progress * PERCENT)}%
+                </span>
+              )}
+            </div>
+            {upload.error ? (
               <p className="m-0 text-[13px] text-accent" role="alert">
                 {upload.error}
               </p>
-              <Button
-                onClick={() =>
-                  setUploads((current) =>
-                    current.filter((u) => u.id !== upload.id)
-                  )
-                }
-                size="sm"
-                type="button"
-                variant="ghost"
-              >
-                Dismiss
-              </Button>
-            </div>
-          ) : (
-            <div
-              aria-label={`Uploading ${upload.name}`}
-              className="upload-bar"
-              role="progressbar"
-            >
-              <span
-                style={{ width: `${Math.round(upload.progress * 100)}%` }}
+            ) : (
+              <Progress
+                aria-label={`Uploading ${upload.name}`}
+                value={upload.progress * PERCENT}
               />
-            </div>
-          )}
-        </div>
+            )}
+          </ItemContent>
+        </Item>
       ))}
 
       {/* biome-ignore lint/a11y/noNoninteractiveElementInteractions: the drop target wraps a real button for keyboard users */}
       {/* biome-ignore lint/a11y/noStaticElementInteractions: same */}
       <div
-        className="dropzone"
-        data-active={dragging ? "true" : undefined}
-        onDragLeave={() => setDragging(false)}
-        onDragOver={(event) => {
-          event.preventDefault();
-          setDragging(true);
-        }}
-        onDrop={onDrop}
+        className="flex flex-col items-center rounded-xl border border-rule-strong border-dashed px-4 py-6 text-center transition-colors has-[input:focus-visible]:border-accent data-[dragging=true]:border-accent data-[dragging=true]:bg-paper-raised"
+        data-dragging={isDragging || undefined}
+        onDragEnter={drop.handleDragEnter}
+        onDragLeave={drop.handleDragLeave}
+        onDragOver={drop.handleDragOver}
+        onDrop={drop.handleDrop}
       >
         <input
-          accept={ACCEPT}
+          {...drop.getInputProps()}
+          aria-label="Add video or photos"
           className="sr-only"
-          multiple
-          onChange={onPick}
-          ref={fileInput}
-          type="file"
         />
+        <span
+          aria-hidden="true"
+          className="mb-2 flex size-10 items-center justify-center rounded-full border border-rule bg-paper-raised text-ink-soft"
+        >
+          <Images className="size-4" />
+        </span>
+        <p className="m-0 mb-1 font-medium text-[14px] text-ink">
+          Drop video or photos here
+        </p>
+        <p className="m-0 text-[12.5px] text-ink-faint">
+          mp4, webm, mov, jpg, png or webp, up to {formatBytes(MEDIA_MAX_BYTES)}
+        </p>
         <Button
-          onClick={() => fileInput.current?.click()}
+          className="mt-4"
+          onClick={drop.openFileDialog}
           size="sm"
           type="button"
           variant="outline"
         >
-          <Upload /> Add video or photo
+          <Upload data-icon="inline-start" />
+          Choose files
         </Button>
-        <p className="mt-2 mb-0 text-[12.5px]">
-          or drop a file here · mp4, webm, mov, jpg, png, webp · up to{" "}
-          {MEDIA_MAX_BYTES / MEGABYTE} MB
-        </p>
       </div>
 
-      {error ? (
-        <p className="m-0 text-[13px] text-accent" role="alert">
-          {error}
+      {problems.map((problem) => (
+        <p
+          className="m-0 flex items-start gap-1.5 text-[13px] text-accent"
+          key={problem}
+          role="alert"
+        >
+          <CircleAlert
+            aria-hidden="true"
+            className="mt-0.5 size-3.5 shrink-0"
+          />
+          {problem}
         </p>
-      ) : null}
+      ))}
     </div>
   );
 }

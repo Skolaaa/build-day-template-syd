@@ -1,7 +1,7 @@
 import type { SearchHit } from "@repo/mongo/shared";
 import { formatShortDate } from "@repo/mongo/shared";
 import { useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import {
   Command,
   CommandDialog,
@@ -11,14 +11,26 @@ import {
   CommandItem,
   CommandList,
 } from "#/components/ui/command";
+import { Kbd, KbdGroup } from "#/components/ui/kbd";
 import { searchFn } from "#/server/journal";
 
 const OPEN_EVENT = "life-on-a-shelf:search";
 const DEBOUNCE_MS = 180;
+const APPLE = /mac|iphone|ipad/i;
+const noop = () => () => undefined;
 
 /** Anything can ask for the palette; the header's Search button does. */
 export function openSearch() {
   window.dispatchEvent(new CustomEvent(OPEN_EVENT));
+}
+
+/** "⌘" on a Mac, "Ctrl" elsewhere; the server says "Ctrl" and the browser corrects it. */
+export function useSearchShortcutLabel(): string {
+  return useSyncExternalStore(
+    noop,
+    () => (APPLE.test(navigator.userAgent) ? "⌘" : "Ctrl"),
+    () => "Ctrl"
+  );
 }
 
 export default function SearchPalette() {
@@ -80,6 +92,7 @@ export default function SearchPalette() {
 
   return (
     <CommandDialog
+      className="sm:max-w-lg"
       description="Search every page you have written"
       onOpenChange={setOpen}
       open={open}
@@ -97,6 +110,18 @@ export default function SearchPalette() {
             <p className="px-4 py-6 text-accent text-sm" role="alert">
               The search could not be run. Try again in a moment.
             </p>
+          ) : null}
+          {status !== "error" && query.trim().length === 0 ? (
+            <div className="flex items-center justify-between px-3 py-3 text-[12.5px] text-ink-faint">
+              <span>Type a word from any page.</span>
+              <KbdGroup>
+                <Kbd>↑</Kbd>
+                <Kbd>↓</Kbd>
+                <span>to move</span>
+                <Kbd>↵</Kbd>
+                <span>to open</span>
+              </KbdGroup>
+            </div>
           ) : null}
           {status !== "error" &&
           query.trim().length > 0 &&

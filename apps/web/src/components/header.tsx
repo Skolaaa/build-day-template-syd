@@ -1,74 +1,108 @@
 import { Show } from "@clerk/tanstack-react-start";
 import { Link } from "@tanstack/react-router";
+import {
+  CalendarClock,
+  Library,
+  MapIcon,
+  PenLine,
+  Search,
+  Settings2,
+} from "lucide-react";
 import { Button } from "#/components/ui/button";
+import { Kbd, KbdGroup } from "#/components/ui/kbd";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "#/components/ui/tooltip";
 import ClerkHeader from "../integrations/clerk/header-user.tsx";
-import { openSearch } from "./journal/search-palette";
-import ThemeToggle from "./theme-toggle";
+import { openSearch, useSearchShortcutLabel } from "./journal/search-palette";
+import { ThemeSwitcher } from "./theme-switcher";
+
+const NAV = [
+  { icon: Library, label: "Shelf", to: "/" },
+  { icon: MapIcon, label: "Atlas", to: "/atlas" },
+  { icon: CalendarClock, label: "On this day", to: "/on-this-day" },
+] as const;
 
 export default function Header() {
+  const shortcut = useSearchShortcutLabel();
+
   return (
-    <header className="sticky top-0 z-40 border-rule border-b bg-paper/88 px-4 backdrop-blur-md">
-      <nav className="page-wrap flex flex-wrap items-center gap-x-3 gap-y-2 py-3 sm:py-4">
-        <h2 className="m-0 flex-shrink-0 text-base">
-          <Link
-            className="inline-flex items-center gap-2.5 font-serif text-[19px] text-ink no-underline"
-            to="/"
-          >
-            <BrandMark />
-            Life on a Shelf
-          </Link>
-        </h2>
+    <header className="sticky top-0 z-40 border-rule border-b bg-paper/85 backdrop-blur-md">
+      <div className="page-wrap flex h-14 items-center gap-3">
+        <Link
+          className="inline-flex shrink-0 items-center gap-2.5 font-serif text-[19px] text-ink no-underline"
+          to="/"
+        >
+          <BrandMark />
+          Life on a Shelf
+        </Link>
 
         <Show when="signed-in">
-          <div className="order-3 flex w-full flex-wrap items-center gap-x-4 gap-y-1 pb-1 text-sm sm:order-none sm:ml-6 sm:w-auto sm:flex-nowrap sm:pb-0">
-            <Link
-              activeOptions={{ exact: true }}
-              activeProps={{ className: "nav-link is-active" }}
-              className="nav-link"
-              to="/"
-            >
-              Shelf
-            </Link>
-            <Link
-              activeProps={{ className: "nav-link is-active" }}
-              className="nav-link"
-              to="/atlas"
-            >
-              Atlas
-            </Link>
-            <Link
-              activeProps={{ className: "nav-link is-active" }}
-              className="nav-link"
-              to="/on-this-day"
-            >
-              On this day
-            </Link>
-            <button className="nav-link" onClick={openSearch} type="button">
-              Search <kbd>Ctrl K</kbd>
-            </button>
-          </div>
+          <nav aria-label="Journal" className="ml-3 hidden md:block">
+            <ul className="m-0 flex list-none items-center gap-0.5 rounded-full bg-paper-sunk p-0.5 ring-1 ring-rule">
+              {NAV.map(({ icon: Icon, label, to }) => (
+                <li key={to}>
+                  <Link
+                    activeOptions={{ exact: to === "/" }}
+                    activeProps={{ className: "is-active" }}
+                    className="nav-pill"
+                    to={to}
+                  >
+                    <Icon aria-hidden="true" className="size-3.5" />
+                    {label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
         </Show>
 
         <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
           <Show when="signed-in">
+            <button
+              className="hidden h-8 items-center gap-2 rounded-lg border border-rule bg-paper-raised/60 pr-1.5 pl-2.5 text-[13px] text-ink-faint transition-colors hover:border-rule-strong hover:text-ink-soft md:inline-flex"
+              onClick={openSearch}
+              type="button"
+            >
+              <Search aria-hidden="true" className="size-3.5" />
+              Search
+              <KbdGroup>
+                <Kbd>{shortcut}</Kbd>
+                <Kbd>K</Kbd>
+              </KbdGroup>
+            </button>
             <Button asChild size="sm">
-              <Link to="/write">Write today</Link>
-            </Button>
-            <Button asChild size="sm" variant="ghost">
-              <Link
-                activeProps={{ className: "text-ink" }}
-                aria-label="Settings"
-                title="Settings"
-                to="/settings"
-              >
-                <SettingsGlyph />
+              <Link to="/write">
+                <PenLine data-icon="inline-start" />
+                Write today
               </Link>
             </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  asChild
+                  className="hidden md:inline-flex"
+                  size="icon-sm"
+                  variant="ghost"
+                >
+                  <Link
+                    activeProps={{ className: "bg-paper-sunk text-ink" }}
+                    aria-label="Settings"
+                    to="/settings"
+                  >
+                    <Settings2 />
+                  </Link>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Settings</TooltipContent>
+            </Tooltip>
           </Show>
+          <ThemeSwitcher className="hidden sm:inline-flex" />
           <ClerkHeader />
-          <ThemeToggle />
         </div>
-      </nav>
+      </div>
     </header>
   );
 }
@@ -84,23 +118,5 @@ function BrandMark() {
       <i className="block h-[18px] w-1 rounded-[1px] bg-accent" />
       <i className="block h-[15px] w-1 rounded-[1px] bg-accent opacity-60" />
     </span>
-  );
-}
-
-function SettingsGlyph() {
-  return (
-    <svg
-      aria-hidden="true"
-      fill="none"
-      height="18"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="1.6"
-      viewBox="0 0 24 24"
-      width="18"
-    >
-      <path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6" />
-    </svg>
   );
 }

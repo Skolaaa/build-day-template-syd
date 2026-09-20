@@ -3,26 +3,28 @@ import {
   countWords,
   type Entry,
   formatLongDate,
+  isMood,
   MOOD_LABELS,
   MOODS,
   type Mood,
-  normalizeTag,
   plural,
-  TAG_MAX_LENGTH,
   TITLE_MAX_LENGTH,
 } from "@repo/mongo/shared";
-import { X } from "lucide-react";
-import {
-  type KeyboardEvent,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
+import { Kbd, KbdGroup } from "#/components/ui/kbd";
+import { Spinner } from "#/components/ui/spinner";
+import { ToggleGroup, ToggleGroupItem } from "#/components/ui/toggle-group";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "#/components/ui/tooltip";
 import { saveEntryFn } from "#/server/journal";
 import { MediaManager } from "./media-manager";
+import { useSearchShortcutLabel } from "./search-palette";
+import { TagPicker } from "./tag-picker";
 
 const AUTOSAVE_MS = 1200;
 
@@ -43,6 +45,8 @@ interface EditorProps {
   mediaEnabled: boolean;
   /** Called after a successful save with the page as stored. */
   onSaved?: (entry: Entry) => void;
+  /** Tags used on other pages, offered by the tag picker. */
+  suggestions: string[];
 }
 
 function draftOf(entry: Entry | null): Draft {
@@ -89,6 +93,11 @@ function writeLocalDraft(date: string, draft: Draft | null) {
   }
 }
 
+function moodOf(value: string): Mood | null {
+  const number = Number(value);
+  return isMood(number) ? number : null;
+}
+
 /**
  * One day's page. Autosaves a beat after typing stops, keeps a copy in
  * localStorage until the server has confirmed it, and never throws away
@@ -100,10 +109,10 @@ export function Editor({
   mediaEnabled,
   onSaved,
   actions,
+  suggestions,
 }: EditorProps) {
   const [entry, setEntry] = useState<Entry | null>(initial);
   const [draft, setDraft] = useState<Draft>(() => draftOf(initial));
-  const [tagInput, setTagInput] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
   const [restored, setRestored] = useState(false);
@@ -111,6 +120,7 @@ export function Editor({
   const inFlight = useRef<Promise<Entry> | null>(null);
   const draftRef = useRef(draft);
   draftRef.current = draft;
+  const shortcut = useSearchShortcutLabel();
 
   // A draft left behind by a failed save or a closed tab comes back first.
   useEffect(() => {
@@ -213,30 +223,6 @@ export function Editor({
     [entry, save]
   );
 
-  const addTag = useCallback(() => {
-    const tag = normalizeTag(tagInput);
-    if (tag.length === 0 || tag.length > TAG_MAX_LENGTH) {
-      return;
-    }
-    setTagInput("");
-    if (!draft.tags.includes(tag)) {
-      change({ tags: [...draft.tags, tag] });
-    }
-  }, [change, draft.tags, tagInput]);
-
-  const onTagKey = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "Enter" || event.key === ",") {
-      event.preventDefault();
-      addTag();
-    } else if (
-      event.key === "Backspace" &&
-      tagInput.length === 0 &&
-      draft.tags.length > 0
-    ) {
-      change({ tags: draft.tags.slice(0, -1) });
-    }
-  };
-
   const words = useMemo(
     () => countWords(draft.body) + countWords(draft.title),
     [draft]
@@ -266,70 +252,40 @@ export function Editor({
       <div className="mt-7 grid gap-5 border-rule border-t pt-5 sm:grid-cols-2">
         <div className="flex flex-col gap-2">
           <span className="kicker">Tags</span>
-          <div className="flex flex-wrap items-center gap-1.5">
-            {draft.tags.map((tag) => (
-              <span className="tag-chip" key={tag}>
-                {tag}
-                <button
-                  aria-label={`Remove tag ${tag}`}
-                  className="inline-flex text-ink-faint hover:text-accent"
-                  onClick={() =>
-                    change({ tags: draft.tags.filter((t) => t !== tag) })
-                  }
-                  type="button"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </span>
-            ))}
-            <input
-              aria-label="Add a tag"
-              className="min-w-[120px] flex-1 border-0 bg-transparent py-1 text-[13px] text-ink outline-none placeholder:text-ink-faint"
-              maxLength={TAG_MAX_LENGTH}
-              onBlur={addTag}
-              onChange={(event) => setTagInput(event.target.value)}
-              onKeyDown={onTagKey}
-              placeholder={
-                draft.tags.length === 0 ? "walks, family, work…" : "add another"
-              }
-              type="text"
-              value={tagInput}
-            />
-          </div>
+          <TagPicker
+            onChange={(tags) => change({ tags })}
+            suggestions={suggestions}
+            value={draft.tags}
+          />
         </div>
         <div className="flex flex-col gap-2">
           <span className="kicker">How it felt</span>
-          <fieldset className="m-0 flex items-center gap-2 border-0 p-0">
-            <legend className="sr-only">How it felt</legend>
-            {MOODS.map((mood) => (
-              <label
-                className="mood-choice"
-                data-mood={mood}
-                data-selected={draft.mood === mood ? "true" : undefined}
-                key={mood}
-                title={MOOD_LABELS[mood]}
-              >
-                <input
-                  checked={draft.mood === mood}
-                  className="sr-only"
-                  name="mood"
-                  onChange={() => change({ mood })}
-                  onClick={() => {
-                    // A second click on the chosen mood clears it.
-                    if (draft.mood === mood) {
-                      change({ mood: null });
-                    }
-                  }}
-                  type="radio"
-                  value={mood}
-                />
-                <span className="sr-only">{MOOD_LABELS[mood]}</span>
-              </label>
-            ))}
-            <span className="ml-1 text-[13px] text-ink-faint">
+          <div className="flex items-center gap-3">
+            <ToggleGroup
+              aria-label="How it felt"
+              onValueChange={(value) => change({ mood: moodOf(value) })}
+              spacing={2}
+              type="single"
+              value={draft.mood ? String(draft.mood) : ""}
+            >
+              {MOODS.map((mood) => (
+                <Tooltip key={mood}>
+                  <TooltipTrigger asChild>
+                    <ToggleGroupItem
+                      aria-label={MOOD_LABELS[mood]}
+                      className="mood-choice"
+                      data-mood={mood}
+                      value={String(mood)}
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent>{MOOD_LABELS[mood]}</TooltipContent>
+                </Tooltip>
+              ))}
+            </ToggleGroup>
+            <span className="text-[13px] text-ink-faint">
               {draft.mood ? MOOD_LABELS[draft.mood] : "not said"}
             </span>
-          </fieldset>
+          </div>
         </div>
       </div>
 
@@ -343,12 +299,14 @@ export function Editor({
         />
       </div>
 
-      <div className="mt-6 flex flex-wrap items-center justify-between gap-3.5">
-        <p className="m-0 text-[13px] text-ink-faint" role="status">
-          {plural(words, "word")} ·{" "}
+      <div className="mt-6 flex flex-wrap items-center justify-between gap-3.5 border-rule border-t pt-5">
+        <output className="m-0 flex flex-wrap items-center gap-2 text-[13px] text-ink-faint">
+          <Badge className="text-ink-soft" variant="outline">
+            {plural(words, "word")}
+          </Badge>
           <SaveState error={error} restored={restored} status={status} />
-        </p>
-        <div className="flex flex-wrap gap-2">
+        </output>
+        <div className="flex flex-wrap items-center gap-2">
           {status === "error" || status === "dirty" ? (
             <Button
               onClick={() => save().catch(() => undefined)}
@@ -357,6 +315,10 @@ export function Editor({
               variant="outline"
             >
               Save now
+              <KbdGroup className="hidden sm:inline-flex">
+                <Kbd>{shortcut}</Kbd>
+                <Kbd>S</Kbd>
+              </KbdGroup>
             </Button>
           ) : null}
           {actions}
@@ -384,7 +346,12 @@ function SaveState({
     );
   }
   if (status === "saving") {
-    return <span>saving…</span>;
+    return (
+      <span className="inline-flex items-center gap-1.5">
+        <Spinner className="size-3" />
+        saving…
+      </span>
+    );
   }
   if (status === "dirty") {
     return <span>{restored ? "restored an unsaved draft" : "unsaved"}</span>;

@@ -16,6 +16,7 @@ import {
   notFound,
   useRouter,
 } from "@tanstack/react-router";
+import { ChevronLeft, ChevronRight, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { Editor } from "#/components/journal/editor";
 import { PageBody } from "#/components/journal/markdown";
@@ -23,6 +24,7 @@ import { MediaGallery } from "#/components/journal/media-gallery";
 import { MoodDot } from "#/components/journal/mood-dot";
 import { JournalError, Loading } from "#/components/journal/states";
 import { TagLink } from "#/components/journal/tag-link";
+import { PageBreadcrumb } from "#/components/page-header";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,6 +37,13 @@ import {
   AlertDialogTrigger,
 } from "#/components/ui/alert-dialog";
 import { Button } from "#/components/ui/button";
+import {
+  Item,
+  ItemContent,
+  ItemDescription,
+  ItemMedia,
+} from "#/components/ui/item";
+import { cn } from "#/lib/utils";
 import { deleteEntryFn, getEntryPageFn } from "#/server/journal";
 
 export const Route = createFileRoute("/entry/$date")({
@@ -58,7 +67,7 @@ export const Route = createFileRoute("/entry/$date")({
 
 function EntryPage() {
   const { date } = Route.useParams();
-  const { entry, older, newer, mediaEnabled, settings, today } =
+  const { entry, older, newer, mediaEnabled, settings, tags, today } =
     Route.useLoaderData();
   const router = useRouter();
   const [editing, setEditing] = useState(entry === null);
@@ -71,13 +80,15 @@ function EntryPage() {
 
   return (
     <main className="page-wrap rise-in px-4 py-10">
-      <Link
-        className="mb-5 inline-flex items-center gap-1.5 font-serif text-[14px] text-ink-soft no-underline hover:text-accent"
-        params={{ periodKey: volumeKey }}
-        to="/volume/$periodKey"
-      >
-        ← {periodLabel(volumeKey)}
-      </Link>
+      <div className="mb-6">
+        <PageBreadcrumb
+          crumbs={[
+            { label: "The shelf", to: "/" },
+            { label: periodLabel(volumeKey), volume: volumeKey },
+            { label: formatShortDate(date) },
+          ]}
+        />
+      </div>
 
       <article className="page-sheet">
         {editing ? (
@@ -94,6 +105,7 @@ function EntryPage() {
             key={`${date}:${entry?.updatedAt ?? "new"}`}
             mediaEnabled={mediaEnabled}
             onSaved={entry ? undefined : () => router.invalidate()}
+            suggestions={tags}
           />
         ) : null}
         {!editing && entry ? (
@@ -144,7 +156,7 @@ function PageView({ date, entry, onEdit, volumeKey }: PageViewProps) {
             <span className="text-ink-faint italic">Untitled</span>
           )}
         </h1>
-        <p className="mt-3 mb-0 flex flex-wrap items-center gap-1 text-[13px] text-ink-faint">
+        <p className="mt-3 mb-0 flex flex-wrap items-center gap-1.5 text-[13px] text-ink-faint">
           <span>{readingTime(entry.words)}</span>
           {entry.mood ? (
             <>
@@ -173,6 +185,7 @@ function PageView({ date, entry, onEdit, volumeKey }: PageViewProps) {
 
       <footer className="mt-10 flex flex-wrap items-center gap-3 border-rule border-t pt-5">
         <Button onClick={onEdit} type="button" variant="outline">
+          <Pencil data-icon="inline-start" />
           Edit this page
         </Button>
         <TearOut date={date} entry={entry} volumeKey={volumeKey} />
@@ -215,7 +228,13 @@ function TearOut({
     <>
       <AlertDialog>
         <AlertDialogTrigger asChild>
-          <Button disabled={deleting} type="button" variant="ghost">
+          <Button
+            className="text-ink-faint"
+            disabled={deleting}
+            type="button"
+            variant="ghost"
+          >
+            <Trash2 data-icon="inline-start" />
             Tear it out
           </Button>
         </AlertDialogTrigger>
@@ -249,35 +268,47 @@ function PageNavLink({
   direction: "older" | "newer";
   entry: EntrySummary | null;
 }) {
-  const label = direction === "older" ? "← Earlier" : "Later →";
+  const older = direction === "older";
+  const Icon = older ? ChevronLeft : ChevronRight;
+  const label = older ? "Earlier" : "Later";
+  const side = older ? "" : "flex-row-reverse text-right";
+
   if (!entry) {
     return (
-      <span className="page-nav-link text-ink-faint" data-direction={direction}>
-        <span className="text-[11px] uppercase tracking-[0.12em]">{label}</span>
-        <span className="font-serif text-[15px] italic">
-          {direction === "older"
-            ? "This is the first page."
-            : "This is the latest page."}
-        </span>
-      </span>
+      <Item className={cn("text-ink-faint", side)} variant="muted">
+        <ItemMedia variant="icon">
+          <Icon />
+        </ItemMedia>
+        <ItemContent className={cn(!older && "items-end")}>
+          <span className="text-[11px] uppercase tracking-[0.12em]">
+            {label}
+          </span>
+          <ItemDescription className="font-serif text-[15px] italic">
+            {older ? "This is the first page." : "This is the latest page."}
+          </ItemDescription>
+        </ItemContent>
+      </Item>
     );
   }
+
   return (
-    <Link
-      className="page-nav-link"
-      data-direction={direction}
-      params={{ date: entry.date }}
-      to="/entry/$date"
-    >
-      <span className="text-[11px] text-ink-faint uppercase tracking-[0.12em]">
-        {label}
-      </span>
-      <span className="font-serif text-[17px] text-ink">
-        {entry.title || "Untitled"}
-      </span>
-      <span className="text-[12px] text-ink-faint">
-        {formatShortDate(entry.date)}
-      </span>
-    </Link>
+    <Item asChild className={cn("no-underline", side)} variant="outline">
+      <Link params={{ date: entry.date }} to="/entry/$date">
+        <ItemMedia className="text-ink-faint" variant="icon">
+          <Icon />
+        </ItemMedia>
+        <ItemContent className={cn(!older && "items-end")}>
+          <span className="text-[11px] text-ink-faint uppercase tracking-[0.12em]">
+            {label}
+          </span>
+          <span className="font-serif text-[17px] text-ink">
+            {entry.title || "Untitled"}
+          </span>
+          <ItemDescription className="text-[12px] text-ink-faint">
+            {formatShortDate(entry.date)}
+          </ItemDescription>
+        </ItemContent>
+      </Link>
+    </Item>
   );
 }

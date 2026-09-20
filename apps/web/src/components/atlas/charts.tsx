@@ -5,26 +5,34 @@ import {
   CartesianGrid,
   Line,
   LineChart,
-  ResponsiveContainer,
-  Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "#/components/ui/card";
+import {
+  type ChartConfig,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "#/components/ui/chart";
 import { ClientOnly } from "./client-only";
 
 const CHART_HEIGHT = 220;
 
-// Colours live in CSS (see styles.css) so light and night swap in one place;
-// recharts only ever sees a variable reference.
-const TOOLTIP_STYLE = {
-  background: "var(--paper-raised)",
-  border: "1px solid var(--rule-strong)",
-  borderRadius: 3,
-  boxShadow: "0 8px 20px -12px var(--shadow)",
-  color: "var(--ink)",
-  fontSize: 12.5,
-  padding: "6px 10px",
-} as const;
+// One series per picture, coloured from the same token the shelf uses, so
+// light and night swap in one place; recharts only ever sees a variable.
+const CONFIG: ChartConfig = {
+  value: { color: "var(--viz-mark)", label: "value" },
+};
+
+const AXIS_TICK = { fill: "var(--ink-faint)", fontSize: 11 } as const;
 
 export function VizCard({
   title,
@@ -39,25 +47,35 @@ export function VizCard({
   title: string;
 }) {
   return (
-    <section className="viz-card">
-      <header className="mb-4 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
-        <div>
-          <h2 className="viz-title">{title}</h2>
-          {subtitle ? <p className="viz-subtitle">{subtitle}</p> : null}
-        </div>
-        {aside}
-      </header>
-      {children}
-    </section>
+    <Card className="bg-paper-raised ring-rule">
+      <CardHeader className="items-start">
+        <CardTitle className="font-normal font-serif text-[20px] text-ink">
+          {title}
+        </CardTitle>
+        {subtitle ? (
+          <CardDescription className="text-ink-faint">
+            {subtitle}
+          </CardDescription>
+        ) : null}
+        {aside ? <CardAction>{aside}</CardAction> : null}
+      </CardHeader>
+      <CardContent className="min-w-0">{children}</CardContent>
+    </Card>
   );
 }
 
-function Frame({ children }: { children: ReactNode }) {
+function Frame({ children }: { children: React.ReactElement }) {
   return (
     <ClientOnly
       fallback={<div aria-hidden="true" style={{ height: CHART_HEIGHT }} />}
     >
-      <div style={{ height: CHART_HEIGHT, width: "100%" }}>{children}</div>
+      <ChartContainer
+        className="aspect-auto w-full"
+        config={CONFIG}
+        style={{ height: CHART_HEIGHT }}
+      >
+        {children}
+      </ChartContainer>
     </ClientOnly>
   );
 }
@@ -71,44 +89,48 @@ interface BarsProps {
   data: Datum[];
   /** How to say a value in the tooltip: "1,204 words". */
   describe: (value: number) => string;
-  /** Which x labels to show; dense axes thin themselves out. */
-  interval?: number | "preserveStartEnd";
+  /** Which x labels to show; by default a dense axis thins itself out. */
+  interval?: number | "preserveStartEnd" | "equidistantPreserveStart";
 }
 
-export function Bars({ data, describe, interval = 0 }: BarsProps) {
+export function Bars({
+  data,
+  describe,
+  interval = "equidistantPreserveStart",
+}: BarsProps) {
   return (
     <Frame>
-      <ResponsiveContainer>
-        <BarChart data={data} margin={{ bottom: 0, left: 0, right: 4, top: 8 }}>
-          <CartesianGrid stroke="var(--rule)" vertical={false} />
-          <XAxis
-            axisLine={{ stroke: "var(--rule-strong)" }}
-            dataKey="label"
-            interval={interval}
-            minTickGap={18}
-            tick={{ fill: "var(--ink-faint)", fontSize: 11 }}
-            tickLine={false}
-          />
-          <YAxis
-            axisLine={false}
-            tick={{ fill: "var(--ink-faint)", fontSize: 11 }}
-            tickLine={false}
-            width={36}
-          />
-          <Tooltip
-            contentStyle={TOOLTIP_STYLE}
-            cursor={{ fill: "var(--paper-sunk)" }}
-            formatter={(value) => [describe(Number(value)), ""]}
-            separator=""
-          />
-          <Bar
-            dataKey="value"
-            fill="var(--viz-mark)"
-            isAnimationActive={false}
-            radius={[3, 3, 0, 0]}
-          />
-        </BarChart>
-      </ResponsiveContainer>
+      <BarChart data={data} margin={{ bottom: 0, left: 0, right: 4, top: 8 }}>
+        <CartesianGrid stroke="var(--rule)" vertical={false} />
+        <XAxis
+          axisLine={{ stroke: "var(--rule-strong)" }}
+          dataKey="label"
+          interval={interval}
+          minTickGap={18}
+          tick={AXIS_TICK}
+          tickLine={false}
+        />
+        <YAxis axisLine={false} tick={AXIS_TICK} tickLine={false} width={36} />
+        <ChartTooltip
+          content={
+            <ChartTooltipContent
+              className="bg-paper-raised text-ink"
+              formatter={(value) => (
+                <span className="font-medium text-ink">
+                  {describe(Number(value))}
+                </span>
+              )}
+            />
+          }
+          cursor={{ fill: "var(--paper-sunk)" }}
+        />
+        <Bar
+          dataKey="value"
+          fill="var(--color-value)"
+          isAnimationActive={false}
+          radius={[3, 3, 0, 0]}
+        />
+      </BarChart>
     </Frame>
   );
 }
@@ -121,43 +143,45 @@ interface MoodLineProps {
 export function MoodLine({ data, describe }: MoodLineProps) {
   return (
     <Frame>
-      <ResponsiveContainer>
-        <LineChart
-          data={data}
-          margin={{ bottom: 0, left: 0, right: 8, top: 8 }}
-        >
-          <CartesianGrid stroke="var(--rule)" vertical={false} />
-          <XAxis
-            axisLine={{ stroke: "var(--rule-strong)" }}
-            dataKey="label"
-            interval="preserveStartEnd"
-            tick={{ fill: "var(--ink-faint)", fontSize: 11 }}
-            tickLine={false}
-          />
-          <YAxis
-            axisLine={false}
-            domain={[1, 5]}
-            tick={{ fill: "var(--ink-faint)", fontSize: 11 }}
-            tickLine={false}
-            ticks={[1, 2, 3, 4, 5]}
-            width={24}
-          />
-          <Tooltip
-            contentStyle={TOOLTIP_STYLE}
-            formatter={(value) => [describe(Number(value)), ""]}
-            separator=""
-          />
-          <Line
-            connectNulls
-            dataKey="value"
-            dot={{ fill: "var(--viz-mark)", r: 2.5, strokeWidth: 0 }}
-            isAnimationActive={false}
-            stroke="var(--viz-mark)"
-            strokeWidth={1.5}
-            type="monotone"
-          />
-        </LineChart>
-      </ResponsiveContainer>
+      <LineChart data={data} margin={{ bottom: 0, left: 0, right: 8, top: 8 }}>
+        <CartesianGrid stroke="var(--rule)" vertical={false} />
+        <XAxis
+          axisLine={{ stroke: "var(--rule-strong)" }}
+          dataKey="label"
+          interval="preserveStartEnd"
+          tick={AXIS_TICK}
+          tickLine={false}
+        />
+        <YAxis
+          axisLine={false}
+          domain={[1, 5]}
+          tick={AXIS_TICK}
+          tickLine={false}
+          ticks={[1, 2, 3, 4, 5]}
+          width={24}
+        />
+        <ChartTooltip
+          content={
+            <ChartTooltipContent
+              className="bg-paper-raised text-ink"
+              formatter={(value) => (
+                <span className="font-medium text-ink">
+                  {describe(Number(value))}
+                </span>
+              )}
+            />
+          }
+        />
+        <Line
+          connectNulls
+          dataKey="value"
+          dot={{ fill: "var(--color-value)", r: 2.5, strokeWidth: 0 }}
+          isAnimationActive={false}
+          stroke="var(--color-value)"
+          strokeWidth={1.5}
+          type="monotone"
+        />
+      </LineChart>
     </Frame>
   );
 }

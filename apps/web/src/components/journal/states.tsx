@@ -3,14 +3,43 @@ import {
   Link,
   useRouter,
 } from "@tanstack/react-router";
+import { Library, PenLine } from "lucide-react";
+import type { ReactNode } from "react";
+import { ShelfSkeleton } from "#/components/shelf/shelf-skeleton";
 import { Button } from "#/components/ui/button";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "#/components/ui/empty";
+import { Skeleton } from "#/components/ui/skeleton";
 
+/** The page's shape, drawn in ghosts, while its data is fetched. */
 export function Loading({ what = "the shelf" }: { what?: string }) {
+  if (what === "the shelf") {
+    return (
+      <main aria-busy="true" className="page-wrap px-4 pt-10 pb-8">
+        <output className="sr-only">Fetching the shelf…</output>
+        <Skeleton className="mb-3 h-10 w-48" />
+        <Skeleton className="mb-8 h-5 w-96 max-w-full" />
+        <ShelfSkeleton />
+      </main>
+    );
+  }
   return (
-    <main className="page-wrap px-4 py-16">
-      <p className="m-0 text-ink-soft" role="status">
-        Fetching {what}…
-      </p>
+    <main aria-busy="true" className="page-wrap px-4 py-10">
+      <output className="sr-only">Fetching {what}…</output>
+      <Skeleton className="mb-5 h-4 w-40" />
+      <Skeleton className="mb-3 h-10 w-72 max-w-full" />
+      <Skeleton className="mb-10 h-5 w-96 max-w-full" />
+      <div className="flex flex-col gap-3">
+        <Skeleton className="h-16 w-full" />
+        <Skeleton className="h-16 w-full" />
+        <Skeleton className="h-16 w-full" />
+      </div>
     </main>
   );
 }
@@ -68,20 +97,55 @@ export function JournalError({ error, reset }: ErrorComponentProps) {
   );
 }
 
+interface EmptyNoteProps {
+  action?: ReactNode;
+  className?: string;
+  description: ReactNode;
+  icon: ReactNode;
+  title: string;
+}
+
+/** Nothing here yet, said kindly, with something to do about it. */
+export function EmptyNote({
+  action,
+  className,
+  description,
+  icon,
+  title,
+}: EmptyNoteProps) {
+  return (
+    <Empty className={className}>
+      <EmptyHeader>
+        <EmptyMedia className="text-ink-soft" variant="icon">
+          {icon}
+        </EmptyMedia>
+        <EmptyTitle className="font-normal font-serif text-[26px] text-ink tracking-normal">
+          {title}
+        </EmptyTitle>
+        <EmptyDescription className="text-ink-soft">
+          {description}
+        </EmptyDescription>
+      </EmptyHeader>
+      {action ? <EmptyContent>{action}</EmptyContent> : null}
+    </Empty>
+  );
+}
+
 export function EmptyShelf() {
   return (
-    <div className="mx-auto my-[8vh] max-w-[52ch] text-center">
-      <h2 className="mb-3 font-serif text-[32px] text-ink">
-        Nothing on the shelf yet
-      </h2>
-      <p className="mb-6 text-ink-soft">
-        Every bookcase starts this way. Write one page today and a volume
-        appears with your name on it; keep going and the spine gets thicker the
-        more you write.
-      </p>
-      <Button asChild>
-        <Link to="/write">Write the first page</Link>
-      </Button>
-    </div>
+    <EmptyNote
+      action={
+        <Button asChild>
+          <Link to="/write">
+            <PenLine data-icon="inline-start" />
+            Write the first page
+          </Link>
+        </Button>
+      }
+      className="my-[6vh]"
+      description="Every bookcase starts this way. Write one page today and a volume appears with your name on it; keep going and the spine gets thicker the more you write."
+      icon={<Library />}
+      title="Nothing on the shelf yet"
+    />
   );
 }

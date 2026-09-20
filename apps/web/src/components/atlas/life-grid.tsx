@@ -17,7 +17,8 @@ import {
   setISOWeekYear,
   startOfISOWeek,
 } from "date-fns";
-import { type ReactNode, useEffect, useId, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
+import { ToggleGroup, ToggleGroupItem } from "#/components/ui/toggle-group";
 
 export type GridGranularity = "day" | "week" | "month";
 
@@ -119,32 +120,33 @@ interface GrainPickerProps {
   value: GridGranularity;
 }
 
-/** Days, weeks or months: how fine the grid is cut. */
+/** Days, weeks or months: how fine the grid is cut, as one segmented control. */
 export function GrainPicker({ value, onChange }: GrainPickerProps) {
-  const id = useId();
   return (
-    <fieldset className="grain-picker">
-      <legend className="sr-only">Grain of the grid</legend>
+    <ToggleGroup
+      aria-label="Grain of the grid"
+      onValueChange={(next) => {
+        if (isGranularity(next)) {
+          onChange(next);
+        }
+      }}
+      size="sm"
+      spacing={0}
+      type="single"
+      value={value}
+      variant="outline"
+    >
       {GRID_GRANULARITIES.map((option) => (
-        <label
-          className="grain-option"
-          data-selected={value === option.key ? "true" : undefined}
-          htmlFor={`${id}-${option.key}`}
+        <ToggleGroupItem
+          aria-label={option.title}
+          className="px-3 text-[12.5px] text-ink-faint data-[state=on]:bg-paper-sunk data-[state=on]:text-ink"
           key={option.key}
+          value={option.key}
         >
-          <input
-            checked={value === option.key}
-            className="sr-only"
-            id={`${id}-${option.key}`}
-            name={id}
-            onChange={() => onChange(option.key)}
-            type="radio"
-            value={option.key}
-          />
           {option.label}
-        </label>
+        </ToggleGroupItem>
       ))}
-    </fieldset>
+    </ToggleGroup>
   );
 }
 

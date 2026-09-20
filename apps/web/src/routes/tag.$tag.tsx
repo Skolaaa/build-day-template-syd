@@ -1,7 +1,10 @@
 import { plural } from "@repo/mongo/shared";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { EntryRow } from "#/components/journal/entry-row";
-import { JournalError, Loading } from "#/components/journal/states";
+import { Tag } from "lucide-react";
+import { EntryList, EntryRow } from "#/components/journal/entry-row";
+import { EmptyNote, JournalError, Loading } from "#/components/journal/states";
+import { PageHeader } from "#/components/page-header";
+import { Button } from "#/components/ui/button";
 import { getTagPageFn } from "#/server/journal";
 
 export const Route = createFileRoute("/tag/$tag")({
@@ -16,25 +19,29 @@ function TagPage() {
   const { entries } = Route.useLoaderData();
   return (
     <main className="page-wrap rise-in px-4 py-10">
-      <Link
-        className="mb-5 inline-flex items-center gap-1.5 font-serif text-[14px] text-ink-soft no-underline hover:text-accent"
-        to="/"
-      >
-        ← The shelf
-      </Link>
-      <p className="kicker mb-2">Tagged</p>
-      <h1 className="display-title mb-2 text-[clamp(30px,5vw,44px)] text-ink">
-        {tag}
-      </h1>
-      <p className="mb-8 text-ink-soft">{plural(entries.length, "page")}.</p>
+      <PageHeader
+        crumbs={[{ label: "The shelf", to: "/" }, { label: tag }]}
+        description={`${plural(entries.length, "page")} carry this tag.`}
+        kicker="Tagged"
+        title={tag}
+      />
       {entries.length === 0 ? (
-        <p className="text-ink-faint">No page carries this tag any more.</p>
+        <EmptyNote
+          action={
+            <Button asChild variant="outline">
+              <Link to="/">Back to the shelf</Link>
+            </Button>
+          }
+          description="No page carries this tag any more."
+          icon={<Tag />}
+          title="Nothing here"
+        />
       ) : (
-        <ul className="m-0 list-none p-0">
+        <EntryList>
           {entries.map((entry) => (
             <EntryRow entry={entry} fullDate key={entry.id} />
           ))}
-        </ul>
+        </EntryList>
       )}
     </main>
   );

@@ -40,6 +40,7 @@ import { mediaEnabled, readerToday, requireUserId } from "./context";
 const RECENT_ON_SHELF = 6;
 const TAGS_ON_SHELF = 24;
 const SEARCH_LIMIT = 20;
+const TAG_SUGGESTIONS = 50;
 
 // ---------------------------------------------------------------- helpers
 
@@ -140,15 +141,17 @@ export const getEntryPageFn = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     const userId = await requireUserId();
     return await withDb(env.MONGODB_URI, async (db) => {
-      const [entry, neighbours, settings] = await Promise.all([
+      const [entry, neighbours, settings, tags] = await Promise.all([
         getEntry(db, userId, data.date),
         getEntryNeighbours(db, userId, data.date),
         getSettings(db, userId),
+        listTags(db, userId, TAG_SUGGESTIONS),
       ]);
       return {
         entry,
         mediaEnabled: mediaEnabled(),
         settings,
+        tags: tags.map((t) => t.tag),
         today: readerToday(),
         ...neighbours,
       };
@@ -161,12 +164,19 @@ export const getWritePageFn = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     const userId = await requireUserId();
     const date = data.date ?? readerToday();
-    return await withDb(env.MONGODB_URI, async (db) => ({
-      date,
-      entry: await getEntry(db, userId, date),
-      mediaEnabled: mediaEnabled(),
-      today: readerToday(),
-    }));
+    return await withDb(env.MONGODB_URI, async (db) => {
+      const [entry, tags] = await Promise.all([
+        getEntry(db, userId, date),
+        listTags(db, userId, TAG_SUGGESTIONS),
+      ]);
+      return {
+        date,
+        entry,
+        mediaEnabled: mediaEnabled(),
+        tags: tags.map((t) => t.tag),
+        today: readerToday(),
+      };
+    });
   });
 
 export const saveEntryFn = createServerFn({ method: "POST" })

@@ -1,7 +1,14 @@
 import { Show, SignIn, useUser } from "@clerk/tanstack-react-start";
 import { createFileRoute } from "@tanstack/react-router";
+import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { Button } from "#/components/ui/button";
-import { Card, CardContent, CardHeader } from "#/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "#/components/ui/card";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
@@ -10,40 +17,27 @@ export const Route = createFileRoute("/login")({
 function LoginPage() {
   return (
     <main className="page-wrap flex min-h-[calc(100vh-13rem)] items-center justify-center px-4 py-12">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md bg-paper-raised ring-rule">
         <Show when="signed-out">
           <CardHeader>
-            <p className="island-kicker mb-2">Clerk</p>
-            <h1 className="display-title text-2xl sm:text-3xl">
-              Sign in to continue
-            </h1>
-            <p className="text-muted-foreground text-sm">
-              Clerk renders the sign-in UI, manages sessions, and handles social
-              providers for you.
-            </p>
+            <p className="kicker">Life on a Shelf</p>
+            <CardTitle className="display-title font-normal text-[28px] text-ink">
+              Sign in to your shelf
+            </CardTitle>
+            <CardDescription className="text-ink-soft">
+              Your pages are where you left them. Sign in with the account you
+              wrote them with.
+            </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="flex justify-center pt-2">
-              <SignIn routing="hash" />
-            </div>
+          <CardContent className="flex flex-col items-center gap-5">
+            <SignIn routing="hash" />
             {import.meta.env.DEV ? (
-              <div className="flex justify-center">
-                <Button asChild size="sm" variant="outline">
-                  <a href="/api/dev-login">Dev login (local only)</a>
-                </Button>
-              </div>
+              <Button asChild size="sm" variant="outline">
+                <a href="/api/dev-login">Dev login (local only)</a>
+              </Button>
             ) : null}
-            <p className="text-center text-muted-foreground text-xs">
-              Built with{" "}
-              <a
-                className="font-medium"
-                href="https://clerk.com"
-                rel="noopener noreferrer"
-                target="_blank"
-              >
-                CLERK
-              </a>
-              .
+            <p className="m-0 text-center text-[12.5px] text-ink-faint">
+              Private by design: nothing here is shared, sold or indexed.
             </p>
           </CardContent>
         </Show>
@@ -68,48 +62,29 @@ function SignedInGreeting() {
   return (
     <>
       <CardHeader>
-        <p className="island-kicker mb-2">Clerk</p>
-        <h1 className="display-title text-2xl sm:text-3xl">Welcome back</h1>
-        <p className="text-muted-foreground text-sm">
-          You're signed in as {email}
-        </p>
+        <p className="kicker">Life on a Shelf</p>
+        <CardTitle className="display-title font-normal text-[28px] text-ink">
+          Welcome back
+        </CardTitle>
+        <CardDescription className="text-ink-soft">
+          You're signed in as {email}.
+        </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="flex flex-col gap-5">
         <div className="flex items-center gap-3">
-          {user.imageUrl ? (
-            <img
-              alt=""
-              className="h-10 w-10 rounded-full"
-              height={40}
-              src={user.imageUrl}
-              width={40}
-            />
-          ) : (
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-              <span className="font-medium text-muted-foreground text-sm">
-                {initial}
-              </span>
-            </div>
-          )}
+          <Avatar className="size-10">
+            <AvatarImage alt="" src={user.imageUrl} />
+            <AvatarFallback>{initial}</AvatarFallback>
+          </Avatar>
           <div className="min-w-0 flex-1">
-            <p className="truncate font-medium text-sm">
+            <p className="m-0 truncate font-medium text-sm">
               {user.firstName} {user.lastName}
             </p>
-            <p className="truncate text-muted-foreground text-xs">{email}</p>
+            <p className="m-0 truncate text-ink-faint text-xs">{email}</p>
           </div>
         </div>
-
-        <p className="text-center text-muted-foreground text-xs">
-          Manage your account from the avatar in the header. Built with{" "}
-          <a
-            className="font-medium"
-            href="https://clerk.com"
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            CLERK
-          </a>
-          .
+        <p className="m-0 text-[12.5px] text-ink-faint">
+          Manage your account from the avatar in the header.
         </p>
       </CardContent>
     </>

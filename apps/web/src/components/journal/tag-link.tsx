@@ -1,5 +1,7 @@
 import { formatCount } from "@repo/mongo/shared";
 import { Link } from "@tanstack/react-router";
+import { Badge } from "#/components/ui/badge";
+import { cn } from "#/lib/utils";
 
 interface TagLinkProps {
   count?: number;
@@ -9,14 +11,22 @@ interface TagLinkProps {
 
 export function TagLink({ tag, count, large = false }: TagLinkProps) {
   return (
-    <Link
-      className="tag-chip"
-      data-large={large ? "true" : undefined}
-      params={{ tag }}
-      to="/tag/$tag"
+    <Badge
+      asChild
+      className={cn(
+        "font-normal text-ink-soft no-underline hover:text-accent",
+        large ? "h-7 gap-1.5 px-3 text-[13.5px]" : "text-[12px]"
+      )}
+      variant="secondary"
     >
-      {tag}
-      {count === undefined ? null : <em>{formatCount(count)}</em>}
-    </Link>
+      <Link params={{ tag }} to="/tag/$tag">
+        {tag}
+        {count === undefined ? null : (
+          <span className="text-ink-faint tabular-nums">
+            {formatCount(count)}
+          </span>
+        )}
+      </Link>
+    </Badge>
   );
 }

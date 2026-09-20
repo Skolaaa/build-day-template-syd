@@ -1,7 +1,9 @@
 import { formatLongDate, isIsoDate } from "@repo/mongo/shared";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { BookOpen } from "lucide-react";
 import { Editor } from "#/components/journal/editor";
 import { JournalError, Loading } from "#/components/journal/states";
+import { PageHeader } from "#/components/page-header";
 import { Button } from "#/components/ui/button";
 import { getWritePageFn } from "#/server/journal";
 
@@ -16,28 +18,23 @@ export const Route = createFileRoute("/write")({
 });
 
 function WritePage() {
-  const { date, entry, mediaEnabled, today } = Route.useLoaderData();
+  const { date, entry, mediaEnabled, tags, today } = Route.useLoaderData();
   const navigate = useNavigate();
   const isToday = date === today;
+  const heading = isToday ? "Today's page" : formatLongDate(date);
 
   return (
     <main className="page-wrap rise-in px-4 py-10">
-      <Link
-        className="mb-5 inline-flex items-center gap-1.5 font-serif text-[14px] text-ink-soft no-underline hover:text-accent"
-        to="/"
-      >
-        ← The shelf
-      </Link>
-      <div className="mb-6 flex flex-wrap items-baseline justify-between gap-3">
-        <h1 className="display-title m-0 text-[clamp(26px,4vw,34px)] text-ink">
-          {isToday ? "Today's page" : formatLongDate(date)}
-        </h1>
-        <p className="m-0 text-[13px] text-ink-faint">
-          {entry
+      <PageHeader
+        crumbs={[{ label: "The shelf", to: "/" }, { label: heading }]}
+        description={
+          entry
             ? "You have written here already; this edits it."
-            : "A blank page."}
-        </p>
-      </div>
+            : "A blank page. It saves itself as you write."
+        }
+        title={heading}
+        titleClassName="text-[clamp(26px,4vw,34px)]"
+      />
       <section className="page-sheet">
         <Editor
           actions={
@@ -46,6 +43,7 @@ function WritePage() {
               size="sm"
               type="button"
             >
+              <BookOpen data-icon="inline-start" />
               Read it
             </Button>
           }
@@ -53,6 +51,7 @@ function WritePage() {
           entry={entry}
           key={date}
           mediaEnabled={mediaEnabled}
+          suggestions={tags}
         />
       </section>
     </main>

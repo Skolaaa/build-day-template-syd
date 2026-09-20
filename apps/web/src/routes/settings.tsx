@@ -1,17 +1,28 @@
 import {
+  isVolumePeriod,
   periodKeyFor,
   plural,
   type Shelf,
   VOLUME_PERIODS,
   type VolumePeriod,
 } from "@repo/mongo/shared";
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 import { JournalError, Loading } from "#/components/journal/states";
+import { PageHeader } from "#/components/page-header";
 import { Bookcase } from "#/components/shelf/bookcase";
-import { useThemeMode } from "#/components/theme-toggle";
+import { ThemeSwitcher } from "#/components/theme-switcher";
+import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldLabel,
+  FieldTitle,
+} from "#/components/ui/field";
+import { RadioGroup, RadioGroupItem } from "#/components/ui/radio-group";
 import { getSettingsPageFn, updateSettingsFn } from "#/server/journal";
 
 export const Route = createFileRoute("/settings")({
@@ -36,19 +47,12 @@ const PERIOD_COPY: Record<VolumePeriod, { name: string; note: string }> = {
   },
 };
 
-const THEMES = [
-  { label: "Day", mode: "light" },
-  { label: "Night", mode: "dark" },
-  { label: "Follow the system", mode: "auto" },
-] as const;
-
 function SettingsPage() {
   const { settings, previews, today } = Route.useLoaderData();
   const router = useRouter();
   const [period, setPeriod] = useState<VolumePeriod>(settings.volumePeriod);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [theme, setTheme] = useThemeMode();
   const preview: Shelf = previews[period];
   const dirty = period !== settings.volumePeriod;
 
@@ -58,7 +62,7 @@ function SettingsPage() {
     try {
       await updateSettingsFn({ data: { volumePeriod: period } });
       await router.invalidate();
-      toast(`The shelf is now divided by ${period}.`);
+      toast.success(`The shelf is now divided by ${period}.`);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "The setting could not be saved."
@@ -70,18 +74,11 @@ function SettingsPage() {
 
   return (
     <main className="page-wrap rise-in px-4 py-10">
-      <Link
-        className="mb-5 inline-flex items-center gap-1.5 font-serif text-[14px] text-ink-soft no-underline hover:text-accent"
-        to="/"
-      >
-        ← The shelf
-      </Link>
-      <h1 className="display-title mb-2 text-[clamp(30px,5vw,44px)] text-ink">
-        Settings
-      </h1>
-      <p className="mb-9 max-w-[60ch] text-ink-soft">
-        Two things to decide: how long a volume is, and what light to read by.
-      </p>
+      <PageHeader
+        crumbs={[{ label: "The shelf", to: "/" }, { label: "Settings" }]}
+        description="Two things to decide: how long a volume is, and what light to read by."
+        title="Settings"
+      />
 
       <section className="mb-12">
         <h2 className="section-heading">What one volume covers</h2>
@@ -89,37 +86,40 @@ function SettingsPage() {
           Pages belong to days, not to books, so changing this reshelves the
           whole journal instantly and loses nothing. Change it back any time.
         </p>
-        <fieldset className="m-0 grid gap-3 border-0 p-0 sm:grid-cols-3">
-          <legend className="sr-only">Volume length</legend>
+        <RadioGroup
+          aria-label="Volume length"
+          className="grid gap-3 sm:grid-cols-3"
+          onValueChange={(value) => {
+            if (isVolumePeriod(value)) {
+              setPeriod(value);
+            }
+          }}
+          value={period}
+        >
           {VOLUME_PERIODS.map((option) => (
-            <label
-              className={
-                period === option
-                  ? "panel cursor-pointer border-accent p-4 text-left ring-1 ring-accent"
-                  : "panel cursor-pointer p-4 text-left hover:border-rule-strong"
-              }
+            <FieldLabel
+              className="bg-paper-raised"
+              htmlFor={`period-${option}`}
               key={option}
             >
-              <input
-                checked={period === option}
-                className="sr-only"
-                name="volumePeriod"
-                onChange={() => setPeriod(option)}
-                type="radio"
-                value={option}
-              />
-              <span className="block font-serif text-[19px] text-ink">
-                {PERIOD_COPY[option].name}
-              </span>
-              <span className="mt-1 block text-[13px] text-ink-soft leading-relaxed">
-                {PERIOD_COPY[option].note}
-              </span>
-              <span className="mt-2 block text-[12px] text-ink-faint">
-                {plural(previews[option].stats.volumes, "volume")} on the shelf
-              </span>
-            </label>
+              <Field orientation="horizontal">
+                <RadioGroupItem id={`period-${option}`} value={option} />
+                <FieldContent>
+                  <FieldTitle className="font-serif text-[19px] text-ink">
+                    {PERIOD_COPY[option].name}
+                  </FieldTitle>
+                  <FieldDescription className="text-[13px] text-ink-soft">
+                    {PERIOD_COPY[option].note}
+                  </FieldDescription>
+                  <span className="mt-1 text-[12px] text-ink-faint">
+                    {plural(previews[option].stats.volumes, "volume")} on the
+                    shelf
+                  </span>
+                </FieldContent>
+              </Field>
+            </FieldLabel>
           ))}
-        </fieldset>
+        </RadioGroup>
 
         <div className="mt-6">
           <p className="kicker mb-1">Preview</p>
@@ -136,13 +136,11 @@ function SettingsPage() {
           )}
         </div>
 
-        <div className="mt-2 flex items-center gap-3">
+        <div className="mt-2 flex flex-wrap items-center gap-3">
           <Button disabled={!dirty || saving} onClick={save} type="button">
             {saving ? "Reshelving…" : "Reshelve"}
           </Button>
-          {dirty ? (
-            <span className="text-[13px] text-ink-faint">Not saved yet.</span>
-          ) : null}
+          {dirty ? <Badge variant="outline">Not saved yet</Badge> : null}
           {error ? (
             <p className="m-0 text-[13px] text-accent" role="alert">
               {error}
@@ -153,19 +151,7 @@ function SettingsPage() {
 
       <section>
         <h2 className="section-heading">Light</h2>
-        <div className="flex flex-wrap gap-2">
-          {THEMES.map((option) => (
-            <Button
-              aria-pressed={theme === option.mode}
-              key={option.mode}
-              onClick={() => setTheme(option.mode)}
-              type="button"
-              variant={theme === option.mode ? "default" : "outline"}
-            >
-              {option.label}
-            </Button>
-          ))}
-        </div>
+        <ThemeSwitcher labels />
         <p className="mt-3 text-[13px] text-ink-faint">
           Night is lamplight on the shelf, not white on black.
         </p>
