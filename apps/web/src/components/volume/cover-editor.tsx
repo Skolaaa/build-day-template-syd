@@ -300,7 +300,7 @@ function SpinePreview({ color, entries, periodKey, title }: SpinePreviewProps) {
           <SpineFace volume={volume} />
         </div>
       </div>
-      <div className="shelf-board" />
+      <div className="shelf-plank" />
     </div>
   );
 }

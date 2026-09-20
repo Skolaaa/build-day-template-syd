@@ -6,7 +6,7 @@ interface Ghost {
   width: number;
 }
 
-// Two boards of books drawn as ghosts, sized like real spines so the page
+// Two planks of books drawn as ghosts, sized like real spines so the page
 // keeps its shape while the shelf is fetched and nothing jumps when it lands.
 const ROWS: { id: string; spines: Ghost[] }[] = [
   {
@@ -46,28 +46,25 @@ export function ShelfSkeleton() {
     <output
       aria-busy="true"
       aria-label="Fetching the shelf"
-      className="bookcase block"
+      className="bookcase flex"
     >
-      <div className="bookcase-case">
-        <div aria-hidden="true" className="bookcase-upright is-left" />
-        <div aria-hidden="true" className="bookcase-upright is-right" />
-        <div aria-hidden="true" className="shelf-board is-top" />
-        {ROWS.map((row) => (
-          <div className="shelf" key={row.id}>
-            <div className="shelf-books">
-              {row.spines.map((spine) => (
-                <Skeleton
-                  className="shrink-0 rounded-[2px_4px_4px_2px] bg-white/10"
-                  key={spine.id}
-                  style={{ height: spine.height, width: spine.width }}
-                />
-              ))}
-            </div>
-            <div aria-hidden="true" className="shelf-glow" />
-            <div aria-hidden="true" className="shelf-board" />
+      {ROWS.map((row) => (
+        <div className="shelf-row" key={row.id}>
+          <div className="shelf-label">
+            <Skeleton className="h-4 w-12" />
           </div>
-        ))}
-      </div>
+          <div className="shelf-books">
+            {row.spines.map((spine) => (
+              <Skeleton
+                className="shrink-0 rounded-[3px_5px_5px_3px] bg-rule"
+                key={spine.id}
+                style={{ height: spine.height, width: spine.width }}
+              />
+            ))}
+          </div>
+          <div aria-hidden="true" className="shelf-plank" />
+        </div>
+      ))}
     </output>
   );
 }

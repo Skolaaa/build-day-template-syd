@@ -90,8 +90,8 @@
   --rule-strong: #cfc3ad;
   --accent: #8a4433;
   --accent-soft: #b2725c;
-  --wood-top: #7a5335;
-  --wood-bottom: #4b3220;
+  --wood-top: #c49a6c;
+  --wood-bottom: #8c6543;
   --grid-empty: #e4dccc;
   --bay: #34483f;
   --bay-ink: rgba(251, 247, 238, 0.72);
@@ -166,8 +166,8 @@
   --rule-strong: #453b30;
   --accent: #d08a6c;
   --accent-soft: #b3735a;
-  --wood-top: #3d2a1b;
-  --wood-bottom: #241811;
+  --wood-top: #5b4129;
+  --wood-bottom: #35241a;
   --grid-empty: #262019;
   --bay: #15201c;
   --bay-ink: rgba(251, 247, 238, 0.55);
@@ -393,135 +393,68 @@
 
 /* ---------------------------------------------------------------- shelf */
 
-/* Materials. The grain is procedural: an SVG turbulence stretched along one
-   axis and mapped to alpha, so the streaks run with the wood and the same
-   gradient underneath carries the colour in day and night. */
-:root {
-  --grain-board: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='64'%3E%3Cfilter id='g' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.011 0.32' numOctaves='3' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.08 0 0 0 0 0.04 0 0 0 0 0.02 1.1 0 0 0 -0.35'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
-  --grain-upright: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='420'%3E%3Cfilter id='g' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.32 0.011' numOctaves='3' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.08 0 0 0 0 0.04 0 0 0 0 0.02 1.1 0 0 0 -0.35'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
-  --grain-cloth: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0.5 0 0 0 -0.1'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
-}
-
-/* The case. Two uprights, a top board, and a bay per
-   shelf whose back is painted a deep green. The board above each bay
-   throws a shadow onto the books below, and the bay darkens toward the
-   uprights, which is most of what makes it read as a piece of furniture
-   rather than planks floating on paper. */
+/* The cabinet is gone. Books stand on floating oak planks against the
+   paper of the page, one shelf per year, the way a wall of shelves does in
+   a plain, warm room. What carries the feeling now is the wood, the cloth
+   colours and the gilt, not grain and shadow laid on thick. */
 .bookcase {
-  padding: 4px 0 12px;
-  margin: 8px 0 40px;
-  overflow-x: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  padding: 6px 0 12px;
+  margin: 6px 0 36px;
 }
 
-.bookcase-case {
-  position: relative;
-  min-width: min-content;
-  padding: 0 14px;
-  filter: drop-shadow(0 26px 30px rgba(40, 26, 12, 0.35));
-}
-
-.bookcase-upright {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  z-index: 3;
-  width: 14px;
-  background:
-    var(--grain-upright),
-    linear-gradient(90deg, var(--wood-top), var(--wood-bottom));
-  box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.14);
-}
-
-.bookcase-upright.is-left {
-  left: 0;
-  border-radius: 3px 0 0 3px;
-}
-
-.bookcase-upright.is-right {
-  right: 0;
-  background:
-    var(--grain-upright),
-    linear-gradient(270deg, var(--wood-top), var(--wood-bottom));
-  border-radius: 0 3px 3px 0;
-}
-
-.shelf {
+.shelf-row {
   position: relative;
   display: flex;
   flex-direction: column;
-  min-width: min-content;
-  background:
-    linear-gradient(180deg, rgba(0, 0, 0, 0.55) 0, transparent 46px), var(--bay);
-  box-shadow:
-    inset 28px 0 34px -26px rgba(0, 0, 0, 0.75),
-    inset -28px 0 34px -26px rgba(0, 0, 0, 0.75);
+}
+
+/* The year, set small at the head of its shelf, with what the year holds. */
+.shelf-label {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 0 2px 8px;
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.shelf-year {
+  font-family: var(--font-serif);
+  font-size: 16px;
+  color: var(--ink-soft);
+  text-transform: none;
+  letter-spacing: 0.04em;
 }
 
 .shelf-books {
   display: flex;
-  gap: 3px;
+  gap: 4px;
   align-items: flex-end;
-  min-height: 298px;
-  padding: 26px 22px 0;
+  min-height: 120px;
+  padding: 14px 14px 0;
   perspective: 900px;
-  perspective-origin: 50% 30%;
+  perspective-origin: 50% 20%;
 }
 
-.shelf-space {
-  width: 120px;
-}
-
-/* Light. A wash of daylight from the upper left by day, a warm lamp out of
-   frame at night, laid over the books so they take the colour of it. Lower
-   shelves get less of it. */
-.shelf-glow {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  pointer-events: none;
-  background: radial-gradient(
-    ellipse 90% 90% at 8% -20%,
-    rgba(255, 249, 232, 0.3),
-    transparent 62%
-  );
-  mix-blend-mode: screen;
-}
-
-.dark .shelf-glow {
-  background: radial-gradient(
-    ellipse 64% 130% at 86% -14%,
-    rgba(255, 196, 118, 0.62),
-    rgba(255, 190, 110, 0.14) 46%,
-    transparent 72%
-  );
-}
-
-.shelf + .shelf .shelf-glow {
-  opacity: 0.55;
-}
-
-.shelf + .shelf + .shelf .shelf-glow {
-  opacity: 0.32;
-}
-
-/* The board: a wooden plank with grain, a lit top edge, a darker front lip,
-   and a real shadow thrown onto the bay below it. */
-.shelf-board {
+/* A plank of oak, floating: a lit top edge, a darker front, and the
+   shadow it throws on the wall beneath. */
+.shelf-plank {
   position: relative;
-  z-index: 3;
-  height: 16px;
-  background:
-    var(--grain-board),
-    linear-gradient(180deg, var(--wood-top), var(--wood-bottom));
+  z-index: 1;
+  height: 11px;
+  background: linear-gradient(180deg, var(--wood-top), var(--wood-bottom));
+  border-radius: 2px 2px 4px 4px;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.2),
-    inset 0 -3px 0 rgba(0, 0, 0, 0.26),
-    0 14px 22px -10px rgba(0, 0, 0, 0.7);
-}
-
-.shelf-board.is-top {
-  height: 12px;
-  border-radius: 3px 3px 0 0;
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.16),
+    0 14px 18px -12px rgba(50, 32, 14, 0.5);
 }
 
 /* ---- the books ---- */
@@ -531,12 +464,12 @@
   display: flex;
   flex: 0 0 auto;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   align-items: center;
   justify-content: space-between;
   width: var(--spine-width);
   height: var(--spine-height);
-  padding-block: 15px 11px;
+  padding-block: 14px 10px;
   padding-inline: 4px;
   color: var(--spine-ink, #fbf7ee);
   cursor: pointer;
@@ -544,110 +477,73 @@
 /* the round of the back: thick books curve more */
     linear-gradient(
       90deg,
-      rgba(255, 255, 255, calc(0.2 + var(--spine-round, 0) * 0.16)) 0%,
-      rgba(255, 255, 255, 0.05) calc(14% + var(--spine-round, 0) * 10%),
-      rgba(0, 0, 0, 0) 58%,
-      rgba(0, 0, 0, calc(0.3 + var(--spine-round, 0) * 0.18)) 100%
+      rgba(255, 255, 255, calc(0.16 + var(--spine-round, 0) * 0.1)) 0%,
+      rgba(255, 255, 255, 0.03) 22%,
+      rgba(0, 0, 0, 0) 60%,
+      rgba(0, 0, 0, calc(0.14 + var(--spine-round, 0) * 0.12)) 100%
     ),
     var(--spine-color);
   border: 0;
-  border-radius: 2px 4px 4px 2px;
+  border-radius: 3px 5px 5px 3px;
   box-shadow:
-    inset 0 0 0 1px rgba(0, 0, 0, 0.22),
-    inset 0 2px 0 rgba(255, 255, 255, 0.08),
-    4px 0 7px -3px rgba(0, 0, 0, 0.5),
-    0 12px 18px -14px rgba(0, 0, 0, 0.9);
-  filter: saturate(calc(1 - var(--spine-age, 0) * 0.28));
-  transform: translateY(var(--spine-lift, 0)) rotate(var(--spine-lean, 0deg))
-    rotateX(var(--spine-tip, 0deg));
-  transform-origin: bottom left;
+    inset 0 0 0 1px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    3px 0 5px -3px rgba(0, 0, 0, 0.35),
+    0 10px 12px -10px rgba(0, 0, 0, 0.6);
+  filter: saturate(calc(1 - var(--spine-age, 0) * 0.22));
+  transform: translateY(var(--spine-lift, 0)) rotateX(var(--spine-tip, 0deg));
+  transform-origin: bottom center;
   transition:
     transform 0.28s cubic-bezier(0.2, 0.8, 0.3, 1),
     box-shadow 0.28s;
 }
 
-/* Cloth: a fine diagonal weave with a little tooth to it. */
-.spine::before {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  content: "";
-  background:
-    var(--grain-cloth),
-    repeating-linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.05) 0 1px,
-      transparent 1px 3px
-    );
-  border-radius: inherit;
-  opacity: 0.4;
+.bookcase[data-entering] .spine {
+  animation: spine-settle 0.55s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation-delay: min(calc(var(--i, 0) * 18ms), 700ms);
 }
 
-/* Wear: the years bleach the head of the spine and soften its corners. */
-.spine::after {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  content: "";
-  background:
-    linear-gradient(
-      180deg,
-      rgba(244, 239, 228, calc(var(--spine-age, 0) * 0.26)),
-      transparent 42%
-    ),
-    radial-gradient(
-      circle at 0 0,
-      rgba(244, 239, 228, calc(var(--spine-age, 0) * 0.3)),
-      transparent 12px
-    ),
-    radial-gradient(
-      circle at 100% 0,
-      rgba(244, 239, 228, calc(var(--spine-age, 0) * 0.3)),
-      transparent 12px
-    );
-  border-radius: inherit;
+/* Books settle onto the plank one after another when the shelf appears. */
+@keyframes spine-settle {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* The head of the text block, seen from a little above the shelf. */
 .spine-pages {
   position: absolute;
-  top: -6px;
+  top: -4px;
   right: 1px;
   left: 1px;
-  height: 6px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.35), transparent 40%),
-    repeating-linear-gradient(90deg, #efe6d0 0 1px, #d6c9ab 1px 2px);
+  height: 4px;
+  background: repeating-linear-gradient(90deg, #efe6d0 0 1px, #d9ccae 1px 2px);
   border-radius: 1px 1px 0 0;
-  box-shadow:
-    inset 0 -1px 0 rgba(0, 0, 0, 0.22),
-    0 -1px 0 rgba(0, 0, 0, 0.12);
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.18);
 }
 
 /* Hover pulls the book toward you: it lifts and tips out at the top, like
    a finger hooked over the head of the spine. */
 .spine:hover,
 .spine:focus-visible {
-  --spine-lift: -14px;
-  --spine-tip: -9deg;
-  z-index: 1;
+  --spine-lift: -10px;
+  --spine-tip: -7deg;
+  z-index: 2;
   box-shadow:
-    inset 0 0 0 1px rgba(0, 0, 0, 0.22),
-    inset 0 2px 0 rgba(255, 255, 255, 0.08),
-    6px 0 10px -3px rgba(0, 0, 0, 0.5),
-    0 26px 28px -16px rgba(0, 0, 0, 0.8);
+    inset 0 0 0 1px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    5px 0 8px -3px rgba(0, 0, 0, 0.35),
+    0 22px 24px -16px rgba(0, 0, 0, 0.7);
 }
 
 .spine:focus-visible {
-  outline: 2px solid #fbf7ee;
+  outline: 2px solid var(--accent);
   outline-offset: 3px;
-}
-
-/* A leaning book rests its top on the neighbour, so it lifts less. */
-.spine[data-leaning="true"]:hover,
-.spine[data-leaning="true"]:focus-visible {
-  --spine-lift: -8px;
-  --spine-tip: -5deg;
 }
 
 .spine-title {
@@ -658,11 +554,11 @@
   overflow: hidden;
   text-overflow: ellipsis;
   font-family: var(--font-serif);
-  font-size: 15px;
+  font-size: 14.5px;
   font-weight: 600;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   white-space: nowrap;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
   writing-mode: vertical-rl;
   text-orientation: mixed;
 }
@@ -674,7 +570,7 @@
 }
 
 .spine-title[data-long] {
-  font-size: 13px;
+  font-size: 12.5px;
   letter-spacing: 0.04em;
 }
 
@@ -688,107 +584,24 @@
   opacity: 0.8;
 }
 
-.spine-flat .spine-year {
-  writing-mode: horizontal-tb;
-}
-
-/* ----- the binding. One binding for every book, the way a set is bound:
-   a pair of raised bands at the head and a pair at the tail, catching the
-   light along their top edge. Variety comes from the cloth colour, the
-   thickness and the height, never from the tooling. The bands are laid
-   out in the same flex column as the title, so nothing can ever sit on top
-   of the lettering. Sizes are logical so the same rule dresses a book
-   lying on its side (see .spine-flat). ----- */
-
+/* One rule at the head and one at the tail, tooled into the cloth. */
 .spine-band {
   flex: 0 0 auto;
-  inline-size: calc(100% + 8px);
-  block-size: 3px;
-  background: rgba(0, 0, 0, 0.28);
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.16),
-    0 7px 0 rgba(0, 0, 0, 0.28),
-    0 8px 0 rgba(255, 255, 255, 0.16);
-}
-
-.spine-band:not(:first-of-type) {
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.16),
-    0 -7px 0 rgba(0, 0, 0, 0.28),
-    0 -6px 0 rgba(255, 255, 255, 0.16);
-}
-
-/* ----- a book lying on its side. Flipping the writing mode turns the
-   column of bands and title through ninety degrees; only the physical
-   bits (the light, the corners, the shadows) need saying again. ----- */
-.spine-flat {
-  width: var(--spine-height);
-  height: var(--spine-width);
-  background:
-    linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.24) 0%,
-      rgba(255, 255, 255, 0.04) 12%,
-      rgba(0, 0, 0, 0) 62%,
-      rgba(0, 0, 0, 0.34) 100%
-    ),
-    var(--spine-color);
-  border-radius: 2px 2px 4px 4px;
-  box-shadow:
-    inset 0 0 0 1px rgba(0, 0, 0, 0.22),
-    0 3px 5px -2px rgba(0, 0, 0, 0.6);
-  writing-mode: vertical-lr;
-  transform: translateX(var(--spine-pull, 0));
-}
-
-.spine-flat:hover,
-.spine-flat:focus-visible {
-  --spine-pull: 12px;
-  box-shadow:
-    inset 0 0 0 1px rgba(0, 0, 0, 0.22),
-    0 6px 10px -4px rgba(0, 0, 0, 0.6);
-}
-
-.spine-flat .spine-pages {
-  display: none;
-}
-
-.spine-flat .spine-band {
-  box-shadow:
-    1px 0 0 rgba(255, 255, 255, 0.16),
-    7px 0 0 rgba(0, 0, 0, 0.28),
-    8px 0 0 rgba(255, 255, 255, 0.16);
-}
-
-.spine-flat .spine-band:not(:first-of-type) {
-  box-shadow:
-    1px 0 0 rgba(255, 255, 255, 0.16),
-    -7px 0 0 rgba(0, 0, 0, 0.28),
-    -6px 0 0 rgba(255, 255, 255, 0.16);
-}
-
-.book-pile {
-  display: flex;
-  flex: 0 0 auto;
-  flex-direction: column-reverse;
-  align-items: flex-start;
-  margin-left: 12px;
+  inline-size: calc(100% + 6px);
+  block-size: 2px;
+  background: rgba(0, 0, 0, 0.2);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.14);
 }
 
 /* The volume you are living in, before you have written a word of it. */
 .spine-unopened {
+  gap: 6px;
   width: 44px;
-  color: var(--bay-ink);
+  color: var(--ink-faint);
   background: none;
-  border: 1px dashed var(--bay-ink);
+  border: 1.5px dashed var(--rule-strong);
   box-shadow: none;
   filter: none;
-}
-
-.spine-unopened::before,
-.spine-unopened::after,
-.spine-unopened .spine-pages {
-  display: none;
 }
 
 .spine-unopened:hover,
@@ -798,14 +611,11 @@
   box-shadow: none;
 }
 
-/* ---- the props ---- */
-
-.bookend {
-  flex: 0 0 auto;
-  width: 30px;
-  height: 78px;
-  margin-left: 6px;
-  filter: drop-shadow(3px 4px 4px rgba(0, 0, 0, 0.45));
+.spine.spine-unopened .spine-title {
+  font-size: 12px;
+  text-transform: lowercase;
+  letter-spacing: 0.12em;
+  text-shadow: none;
 }
 
 /* A single spine shown on its own, for the cover editor's preview. */
@@ -814,7 +624,6 @@
   flex-direction: column;
   width: max-content;
   min-width: 132px;
-  border-radius: 3px 3px 0 0;
 }
 
 .spine-preview-books {
@@ -822,14 +631,12 @@
   align-items: flex-end;
   justify-content: center;
   padding: 18px 18px 0;
-  background:
-    linear-gradient(180deg, rgba(0, 0, 0, 0.45) 0, transparent 40px), var(--bay);
-  border-radius: 3px 3px 0 0;
 }
 
 .spine-preview .spine {
   cursor: default;
   transition: none;
+  animation: none;
 }
 
 .spine-preview .spine:hover {
@@ -837,38 +644,31 @@
   --spine-tip: 0deg;
 }
 
-.spine-preview .shelf-board {
-  height: 10px;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.18),
-    inset 0 -3px 0 rgba(0, 0, 0, 0.22);
+.spine-preview .shelf-plank {
+  height: 8px;
 }
 
 /* A miniature of the shelf, for the settings preview. */
 .shelf-mini {
+  gap: 12px;
   margin: 4px 0 8px;
 }
 
-.shelf-mini .bookcase-case {
-  padding: 0 8px;
-  filter: none;
+.shelf-mini .shelf-label {
+  margin-bottom: 4px;
 }
 
-.shelf-mini .bookcase-upright {
-  width: 8px;
+.shelf-mini .shelf-year {
+  font-size: 12px;
 }
 
 .shelf-mini .shelf-books {
   gap: 2px;
-  min-height: 124px;
-  padding: 10px 10px 0;
+  min-height: 60px;
+  padding: 8px 8px 0;
 }
 
-.shelf-mini .shelf-board {
-  height: 8px;
-}
-
-.shelf-mini .shelf-board.is-top {
+.shelf-mini .shelf-plank {
   height: 6px;
 }
 
@@ -879,6 +679,7 @@
   padding-block: 5px 4px;
   padding-inline: 2px;
   border-radius: 1px 2px 2px 1px;
+  animation: none;
 }
 
 .shelf-mini .spine-pages {
@@ -892,18 +693,17 @@
 }
 
 .shelf-mini .spine-band {
-  block-size: 2px;
-  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.28);
-}
-
-.shelf-mini .spine-band:not(:first-of-type) {
-  box-shadow: 0 -4px 0 rgba(0, 0, 0, 0.28);
+  block-size: 1px;
 }
 
 .shelf-mini .spine:hover,
 .shelf-mini .spine:focus-visible {
-  --spine-lift: -4px;
-  --spine-tip: -4deg;
+  --spine-lift: -3px;
+  --spine-tip: -3deg;
+}
+
+.shelf-mini .spine-unopened {
+  width: 26px;
 }
 
 /* Gold foil: the lettering takes a gradient so it catches the light the
@@ -965,17 +765,6 @@
   );
   background-clip: text;
   filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.4));
-}
-
-.spine.spine-flat .spine-title {
-  writing-mode: horizontal-tb;
-}
-
-.spine.spine-unopened .spine-title {
-  font-size: 12px;
-  text-transform: lowercase;
-  letter-spacing: 0.12em;
-  text-shadow: none;
 }
 
 .shelf-mini .spine .spine-title {
@@ -1420,6 +1209,7 @@ a.life-cell:hover {
   .spine,
   .mood-choice {
     transition: opacity 0.2s;
+    animation: none;
   }
 
   .spine:hover,
@@ -1444,7 +1234,6 @@ a.life-cell:hover {
 
 @media (max-width: 620px) {
   .shelf-books {
-    min-height: 250px;
-    padding: 16px 12px 0;
+    padding: 12px 8px 0;
   }
 }

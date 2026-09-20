@@ -1,4 +1,6 @@
 import {
+  formatCount,
+  formatShortDate,
   periodLabel,
   plural,
   SPINE_INK_DARK,
@@ -9,18 +11,23 @@ import {
   spineThickness,
   type Volume,
 } from "@repo/mongo/shared";
-import type { CSSProperties, KeyboardEvent } from "react";
+import { Plus } from "lucide-react";
+import type { CSSProperties, KeyboardEvent, ReactNode } from "react";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "#/components/ui/hover-card";
 
 export type SpineKeyHandler = (event: KeyboardEvent<HTMLButtonElement>) => void;
-
-/** How far a leaning book tilts, in degrees. Enough to read, not enough to fall. */
-export const LEAN_DEGREES = 7;
 
 /** A volume this many years old is as faded as it is going to get. */
 const YEARS_TO_FADE = 6;
 /** Books thicker than this get a rounded back, the way heavy bindings do. */
 const ROUND_BACK_FROM = 56;
 const ROUND_BACK_TO = 96;
+const GLIMPSE_OPEN_MS = 240;
+const GLIMPSE_CLOSE_MS = 80;
 
 /**
  * The custom properties and data attributes that dress one binding. Age
@@ -53,11 +60,10 @@ export function bindingFor(volume: Volume, currentYear: number) {
 interface SpineProps {
   /** The year the reader is in; older volumes fade a little. */
   currentYear: number;
-  /**
-   * Pixels of shelf this book is leaning across. Set on the last book of a
-   * row that has room to spare, so it rests on the one before it.
-   */
-  lean?: number;
+  /** Show a card about the volume on hover. Off for previews. */
+  glimpse?: boolean;
+  /** Position along the whole shelf, for the settle-in stagger. */
+  index: number;
   onKeyDown?: SpineKeyHandler;
   onOpen: () => void;
   volume: Volume;
@@ -68,82 +74,39 @@ export function Spine({
   onOpen,
   onKeyDown,
   currentYear,
-  lean = 0,
+  glimpse = true,
+  index,
 }: SpineProps) {
   const label = periodLabel(volume.periodKey);
   const binding = bindingFor(volume, currentYear);
-  const style = {
-    ...binding.style,
-    // Negative is anticlockwise: the book tips left, onto the one before it.
-    "--spine-lean": lean > 0 ? `-${LEAN_DEGREES}deg` : "0deg",
-    marginLeft: lean > 0 ? `${lean}px` : undefined,
-  } as CSSProperties;
+  const style = { ...binding.style, "--i": index } as CSSProperties;
   const count = plural(volume.entries, "page");
 
-  return (
+  const button = (
     <button
       aria-label={`Open ${volume.title}${volume.named ? `, ${label}` : ""}, ${count}`}
       className="spine"
       data-foil={binding.foil}
       data-ink={binding.ink}
-      data-leaning={lean > 0 ? "true" : undefined}
       onClick={onOpen}
       onKeyDown={onKeyDown}
       style={style}
-      title={`${volume.title} — ${count}`}
       type="button"
     >
       <SpineFace volume={volume} />
     </button>
   );
-}
 
-interface FlatSpineProps {
-  currentYear: number;
-  onKeyDown?: SpineKeyHandler;
-  onOpen: () => void;
-  /** Sideways nudge in px, so a pile is not squared off like a parcel. */
-  shift: number;
-  volume: Volume;
-}
-
-/** The same book lying on its side, as one layer of a pile. */
-export function FlatSpine({
-  volume,
-  onOpen,
-  onKeyDown,
-  currentYear,
-  shift,
-}: FlatSpineProps) {
-  const label = periodLabel(volume.periodKey);
-  const binding = bindingFor(volume, currentYear);
-  const style = {
-    ...binding.style,
-    marginLeft: `${shift}px`,
-  } as CSSProperties;
-  const count = plural(volume.entries, "page");
-
-  return (
-    <button
-      aria-label={`Open ${volume.title}${volume.named ? `, ${label}` : ""}, ${count}`}
-      className="spine spine-flat"
-      data-foil={binding.foil}
-      data-ink={binding.ink}
-      onClick={onOpen}
-      onKeyDown={onKeyDown}
-      style={style}
-      title={`${volume.title} — ${count}`}
-      type="button"
-    >
-      <SpineFace volume={volume} />
-    </button>
-  );
+  if (!glimpse) {
+    return button;
+  }
+  return <VolumeGlimpse volume={volume}>{button}</VolumeGlimpse>;
 }
 
 /** Titles past this many characters are set a size smaller so they fit. */
 const LONG_TITLE = 14;
 
-/** What is stamped on the cloth: bands, the title, and the period at the foot. */
+/** What is stamped on the cloth: a line at each end, the title, the period at the foot. */
 export function SpineFace({ volume }: { volume: Volume }) {
   const face = spineFaceFor(volume);
   return (
@@ -163,7 +126,60 @@ export function SpineFace({ volume }: { volume: Volume }) {
   );
 }
 
+/**
+ * A card about the book under the pointer: what it is called, how much is
+ * in it, and when. After Kibo UI's Glimpse, on shadcn's HoverCard.
+ */
+function VolumeGlimpse({
+  volume,
+  children,
+}: {
+  children: ReactNode;
+  volume: Volume;
+}) {
+  const span =
+    volume.firstEntry && volume.lastEntry
+      ? `${formatShortDate(volume.firstEntry)}${
+          volume.firstEntry === volume.lastEntry
+            ? ""
+            : ` to ${formatShortDate(volume.lastEntry)}`
+        }`
+      : null;
+  return (
+    <HoverCard closeDelay={GLIMPSE_CLOSE_MS} openDelay={GLIMPSE_OPEN_MS}>
+      <HoverCardTrigger asChild>{children}</HoverCardTrigger>
+      <HoverCardContent
+        className="w-60 bg-paper-raised ring-rule"
+        side="top"
+        sideOffset={12}
+      >
+        <p className="m-0 truncate font-serif text-[16px] text-ink">
+          {volume.title}
+        </p>
+        {volume.named ? (
+          <p className="m-0 text-[12px] text-ink-faint">
+            {periodLabel(volume.periodKey)}
+          </p>
+        ) : null}
+        {volume.subtitle ? (
+          <p className="m-0 font-serif text-[13px] text-ink-soft italic">
+            {volume.subtitle}
+          </p>
+        ) : null}
+        <p className="m-0 mt-1.5 text-[12.5px] text-ink-soft">
+          {plural(volume.entries, "page")} · {formatCount(volume.words)} words
+          {volume.mediaCount > 0
+            ? ` · ${plural(volume.mediaCount, "clip")}`
+            : ""}
+        </p>
+        {span ? <p className="m-0 text-[12px] text-ink-faint">{span}</p> : null}
+      </HoverCardContent>
+    </HoverCard>
+  );
+}
+
 interface UnopenedSpineProps {
+  index: number;
   onKeyDown?: SpineKeyHandler;
   onStart: () => void;
   periodKey: string;
@@ -174,8 +190,10 @@ export function UnopenedSpine({
   periodKey,
   onStart,
   onKeyDown,
+  index,
 }: UnopenedSpineProps) {
   const style = {
+    "--i": index,
     "--spine-height": `${spineHeight(periodKey)}px`,
   } as CSSProperties;
   return (
@@ -185,8 +203,10 @@ export function UnopenedSpine({
       onClick={onStart}
       onKeyDown={onKeyDown}
       style={style}
+      title="Write today's page"
       type="button"
     >
+      <Plus aria-hidden="true" className="size-3.5" />
       <span className="spine-title">unopened</span>
       <span className="spine-year">{periodLabel(periodKey)}</span>
     </button>

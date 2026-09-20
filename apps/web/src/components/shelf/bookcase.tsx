@@ -1,156 +1,127 @@
 import {
-  hashKey,
-  PILE_SIZE,
-  spineHeight,
+  formatCount,
+  plural,
   spineThickness,
   type Volume,
 } from "@repo/mongo/shared";
 import { useNavigate } from "@tanstack/react-router";
-import { type KeyboardEvent, useCallback } from "react";
-import { Bookend } from "./props";
-import { FlatSpine, LEAN_DEGREES, Spine, UnopenedSpine } from "./spine";
+import {
+  type KeyboardEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import { useElementWidth } from "#/hooks/use-element-width";
+import { Spine, UnopenedSpine } from "./spine";
 
-/** Room for books on one board, in px: the page width less the case's sides. */
-const SHELF_WIDTH = 960;
-/** The mini shelf draws spines at 0.6 width, so its budget is in full-size units. */
-const MINI_SHELF_WIDTH = 900;
-const BOOK_GAP = 3;
-const MIN_BOOKS_BEFORE_SPACE = 3;
+/** What the shelf is laid out for before it has been measured: the page width. */
+const DEFAULT_WIDTH = 1040;
+const BOOK_GAP = 4;
+/** Horizontal padding of a row of books, both sides together. */
+const ROW_PADDING = 28;
 /** An unopened spine is fixed-width (see .spine-unopened). */
 const UNOPENED_WIDTH = 44;
-const MIN_BOOKS_TO_LEAN = 2;
-/**
- * What a pile takes on the board: the tallest book lying down (291px), its
- * largest sideways nudge, the pile's own margin and the row gap.
- */
-const PILE_WIDTH = 320;
-const PILE_MAX_SHIFT = 14;
-/** Piles go on every other shelf, and only when it still has this many upright. */
-const PILE_EVERY = 2;
-const MIN_UPRIGHT_BESIDE_PILE = 5;
-/** Free board, in px, before a bookend goes in the gap. */
-const ROOM_FOR_BOOKEND = 70;
+/** The settings preview draws spines at this fraction of their size. */
+const MINI_SCALE = 0.6;
+/** How long the books take to settle when the shelf first appears. */
+const SETTLE_MS = 1400;
 
-interface Shelf {
-  /** Pixels of board still free after the books on it. */
-  free: number;
-  /** Books lying on their side at the right end, earliest at the bottom. */
-  pile: Volume[];
+interface Row {
+  key: string;
+  /** True on the first row of a year, which carries the year's label. */
+  opensYear: boolean;
+  /** The current, unwritten volume goes at the end of this row. */
+  unopened: boolean;
   volumes: Volume[];
+  year: string;
+}
+
+interface YearTally {
+  entries: number;
+  volumes: number;
+  words: number;
 }
 
 /**
- * Books go on a shelf until it is full, then the next one. Thick books take
- * more room. Every other shelf ends in a small pile of the next few volumes
- * lying flat, the way a shelf that someone actually uses does.
+ * One shelf per year, the books in order, and a new plank whenever a year
+ * outgrows the width. Thick books take more room. The current volume, if
+ * nothing has been written in it yet, stands at the end of its year.
  */
-function intoShelves(
+function packRows(
   volumes: Volume[],
-  width: number,
-  withPiles: boolean
-): Shelf[] {
-  const shelves: Shelf[] = [];
+  currentPeriodKey: string,
+  unopened: boolean,
+  budget: number,
+  scale: number
+): Row[] {
+  const rows: Row[] = [];
   let row: Volume[] = [];
   let used = 0;
-  let index = 0;
-  const wantsPile = () => withPiles && index % PILE_EVERY === 1;
-  // Only hold room for a pile while enough volumes remain to make one;
-  // otherwise the row fills the whole board like any other.
-  const budget = (remaining: number) =>
-    wantsPile() && remaining >= PILE_SIZE ? width - PILE_WIDTH : width;
-  const close = (remaining: Volume[]): number => {
-    const pile =
-      wantsPile() &&
-      row.length >= MIN_UPRIGHT_BESIDE_PILE &&
-      remaining.length >= PILE_SIZE
-        ? remaining.slice(0, PILE_SIZE)
-        : [];
-    const free = width - used - (pile.length > 0 ? PILE_WIDTH : 0);
-    shelves.push({ free, pile, volumes: row });
-    row = [];
-    used = 0;
-    index += 1;
-    return pile.length;
+  let year = "";
+  let opensYear = true;
+  const flush = () => {
+    const [first] = row;
+    if (first) {
+      rows.push({
+        key: first.periodKey,
+        opensYear,
+        unopened: false,
+        volumes: row,
+        year,
+      });
+      row = [];
+      used = 0;
+      opensYear = false;
+    }
   };
-
-  let i = 0;
-  while (i < volumes.length) {
-    const volume = volumes[i] as Volume;
-    const thickness = spineThickness(volume.entries) + BOOK_GAP;
-    if (row.length > 0 && used + thickness > budget(volumes.length - i)) {
-      i += close(volumes.slice(i));
-      continue;
+  for (const volume of volumes) {
+    const volumeYear = volume.periodKey.slice(0, 4);
+    if (volumeYear !== year) {
+      flush();
+      year = volumeYear;
+      opensYear = true;
+    }
+    const width = spineThickness(volume.entries) * scale + BOOK_GAP;
+    if (row.length > 0 && used + width > budget) {
+      flush();
     }
     row.push(volume);
-    used += thickness;
-    i += 1;
+    used += width;
   }
-  if (row.length > 0 || shelves.length === 0) {
-    close([]);
+  if (unopened) {
+    const currentYear = currentPeriodKey.slice(0, 4);
+    if (currentYear !== year) {
+      flush();
+      year = currentYear;
+      opensYear = true;
+    } else if (used + UNOPENED_WIDTH * scale + BOOK_GAP > budget) {
+      flush();
+    }
+    rows.push({
+      key: `${year}-unopened`,
+      opensYear,
+      unopened: true,
+      volumes: row,
+      year,
+    });
+    row = [];
   }
-  return shelves;
+  flush();
+  return rows;
 }
 
-/**
- * The last book on a row with room to spare leans back onto its neighbour,
- * the way the last book on a real shelf does. The gap it needs at the foot
- * follows from the tilt and the shorter of the two books, so its top edge
- * lands on the neighbour rather than through it.
- */
-function leanFor(shelf: Shelf, unopened: boolean): number {
-  const { volumes, free } = shelf;
-  if (volumes.length < MIN_BOOKS_TO_LEAN || shelf.pile.length > 0) {
-    return 0;
+function tallyYears(volumes: Volume[]): Map<string, YearTally> {
+  const years = new Map<string, YearTally>();
+  for (const volume of volumes) {
+    const year = volume.periodKey.slice(0, 4);
+    const tally = years.get(year) ?? { entries: 0, volumes: 0, words: 0 };
+    tally.entries += volume.entries;
+    tally.volumes += 1;
+    tally.words += volume.words;
+    years.set(year, tally);
   }
-  const last = volumes.at(-1);
-  const neighbour = volumes.at(-2);
-  if (!(last && neighbour)) {
-    return 0;
-  }
-  const height = Math.min(
-    spineHeight(last.periodKey),
-    spineHeight(neighbour.periodKey)
-  );
-  const gap = Math.round(height * Math.sin((LEAN_DEGREES * Math.PI) / 180));
-  const needed = gap + (unopened ? UNOPENED_WIDTH + BOOK_GAP : 0);
-  return free >= needed ? gap : 0;
-}
-
-interface ShelfLayout {
-  bookend: boolean;
-  lean: number;
-  showSpace: boolean;
-  showUnopened: boolean;
-}
-
-/** What else goes on a shelf besides its books, decided once per row. */
-function layoutFor(
-  shelf: Shelf,
-  isLast: boolean,
-  mini: boolean,
-  unopened: boolean
-): ShelfLayout {
-  const showUnopened = isLast && unopened;
-  const books =
-    shelf.volumes.length + shelf.pile.length + (showUnopened ? 1 : 0);
-  const showSpace = isLast && books < MIN_BOOKS_BEFORE_SPACE;
-  if (!isLast || mini) {
-    return { bookend: false, lean: 0, showSpace, showUnopened };
-  }
-  const spare = shelf.free - (showUnopened ? UNOPENED_WIDTH + BOOK_GAP : 0);
-  // A bookend holds the row up, so nothing needs to lean when there is one.
-  const bookend = spare >= ROOM_FOR_BOOKEND;
-  return {
-    bookend,
-    lean: bookend ? 0 : leanFor(shelf, showUnopened),
-    showSpace,
-    showUnopened,
-  };
-}
-
-/** How far a flat book sits from the pile's left edge: fixed per volume. */
-function pileShift(volume: Volume): number {
-  return hashKey(`${volume.periodKey}/pile`) % PILE_MAX_SHIFT;
+  return years;
 }
 
 interface BookcaseProps {
@@ -166,13 +137,26 @@ export function Bookcase({
   mini = false,
 }: BookcaseProps) {
   const navigate = useNavigate();
+  const ref = useRef<HTMLElement>(null);
+  const width = useElementWidth(ref, DEFAULT_WIDTH);
+  // Books settle in once, on arrival; a later re-layout just moves them.
+  const [entering, setEntering] = useState(true);
+  useEffect(() => {
+    const timer = setTimeout(() => setEntering(false), SETTLE_MS);
+    return () => clearTimeout(timer);
+  }, []);
+  const scale = mini ? MINI_SCALE : 1;
   const currentYear = Number(currentPeriodKey.slice(0, 4));
   const unopened = !volumes.some((v) => v.periodKey === currentPeriodKey);
-  const shelves = intoShelves(
+  const rows = packRows(
     volumes,
-    mini ? MINI_SHELF_WIDTH : SHELF_WIDTH,
-    !mini
+    currentPeriodKey,
+    unopened,
+    width - ROW_PADDING * scale,
+    scale
   );
+  const years = tallyYears(volumes);
+  const order = new Map(volumes.map((v, i) => [v.periodKey, i]));
   const open = (volume: Volume) =>
     navigate({
       params: { periodKey: volume.periodKey },
@@ -203,65 +187,64 @@ export function Bookcase({
     <section
       aria-label="Bookcase"
       className={mini ? "bookcase shelf-mini" : "bookcase"}
+      data-entering={entering ? "" : undefined}
+      ref={ref}
     >
-      <div className="bookcase-case">
-        <div aria-hidden="true" className="bookcase-upright is-left" />
-        <div aria-hidden="true" className="bookcase-upright is-right" />
-        <div aria-hidden="true" className="shelf-board is-top" />
-        {shelves.map((shelf, index) => {
-          const layout = layoutFor(
-            shelf,
-            index === shelves.length - 1,
-            mini,
-            unopened
-          );
-          const lastIndex = shelf.volumes.length - 1;
-          return (
-            <div className="shelf" key={shelf.volumes[0]?.periodKey ?? "empty"}>
-              <div className="shelf-books">
-                {shelf.volumes.map((volume, i) => (
-                  <Spine
-                    currentYear={currentYear}
-                    key={volume.periodKey}
-                    lean={i === lastIndex ? layout.lean : 0}
-                    onKeyDown={onKeyDown}
-                    onOpen={() => open(volume)}
-                    volume={volume}
-                  />
-                ))}
-                {shelf.pile.length > 0 ? (
-                  <div className="book-pile">
-                    {/* Column-reverse in CSS puts the earliest at the bottom. */}
-                    {shelf.pile.map((volume) => (
-                      <FlatSpine
-                        currentYear={currentYear}
-                        key={volume.periodKey}
-                        onKeyDown={onKeyDown}
-                        onOpen={() => open(volume)}
-                        shift={pileShift(volume)}
-                        volume={volume}
-                      />
-                    ))}
-                  </div>
-                ) : null}
-                {layout.showUnopened ? (
-                  <UnopenedSpine
-                    onKeyDown={onKeyDown}
-                    onStart={() => navigate({ to: "/write" })}
-                    periodKey={currentPeriodKey}
-                  />
-                ) : null}
-                {layout.bookend ? <Bookend /> : null}
-                {layout.showSpace ? (
-                  <div aria-hidden="true" className="shelf-space" />
-                ) : null}
-              </div>
-              <div aria-hidden="true" className="shelf-glow" />
-              <div aria-hidden="true" className="shelf-board" />
-            </div>
-          );
-        })}
-      </div>
+      {rows.map((row) => (
+        <div className="shelf-row" key={row.key}>
+          {row.opensYear ? (
+            <ShelfLabel
+              mini={mini}
+              tally={years.get(row.year)}
+              year={row.year}
+            />
+          ) : null}
+          <div className="shelf-books">
+            {row.volumes.map((volume) => (
+              <Spine
+                currentYear={currentYear}
+                glimpse={!mini}
+                index={order.get(volume.periodKey) ?? 0}
+                key={volume.periodKey}
+                onKeyDown={onKeyDown}
+                onOpen={() => open(volume)}
+                volume={volume}
+              />
+            ))}
+            {row.unopened ? (
+              <UnopenedSpine
+                index={volumes.length}
+                onKeyDown={onKeyDown}
+                onStart={() => navigate({ to: "/write" })}
+                periodKey={currentPeriodKey}
+              />
+            ) : null}
+          </div>
+          <div aria-hidden="true" className="shelf-plank" />
+        </div>
+      ))}
     </section>
+  );
+}
+
+/** The year, set small at the head of its shelf, with what it holds. */
+function ShelfLabel({
+  mini,
+  tally,
+  year,
+}: {
+  mini: boolean;
+  tally: YearTally | undefined;
+  year: string;
+}) {
+  return (
+    <div className="shelf-label">
+      <span className="shelf-year">{year}</span>
+      {tally && !mini ? (
+        <span>
+          {plural(tally.volumes, "volume")} · {formatCount(tally.words)} words
+        </span>
+      ) : null}
+    </div>
   );
 }
