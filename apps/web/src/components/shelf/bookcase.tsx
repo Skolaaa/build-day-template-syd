@@ -1,5 +1,4 @@
 import {
-  formatCount,
   granularityOf,
   periodSpanLabel,
   plural,
@@ -40,9 +39,9 @@ interface Row {
 }
 
 interface Tally {
-  entries: number;
+  /** Days with a page in them: the count cut into the plank. */
+  days: number;
   volumes: number;
-  words: number;
 }
 
 /**
@@ -134,10 +133,9 @@ function tallyTiers(volumes: Volume[]): Map<string, Tally> {
   const tiers = new Map<string, Tally>();
   for (const volume of volumes) {
     const tier = tierOf(volume.periodKey);
-    const tally = tiers.get(tier) ?? { entries: 0, volumes: 0, words: 0 };
-    tally.entries += volume.entries;
+    const tally = tiers.get(tier) ?? { days: 0, volumes: 0 };
+    tally.days += volume.daysWritten;
     tally.volumes += 1;
-    tally.words += volume.words;
     tiers.set(tier, tally);
   }
   return tiers;
@@ -289,7 +287,7 @@ export function Bookcase({
 /**
  * The board the books stand on, with the year cut into its front edge the
  * way a maker's mark is, and the stretch of the year if it needed more than
- * one plank. The last plank of a year carries the year's count.
+ * one plank. The last plank of a year carries how many days have a page.
  */
 function Plank({
   label,
@@ -308,7 +306,7 @@ function Plank({
       ) : null}
       {tally ? (
         <span className="shelf-carve shelf-carve-tally">
-          {plural(tally.volumes, "volume")} · {formatCount(tally.words)} words
+          {plural(tally.volumes, "volume")} · {plural(tally.days, "day")}
         </span>
       ) : null}
     </div>
