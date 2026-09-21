@@ -97,7 +97,9 @@
   --wood-bottom: #6a472a;
   --wood-carve: #33200f;
   --wood-glint: rgba(255, 236, 205, 0.34);
-  --wood-wall: #ebe3d3;
+  /* The back panel: thinner, darker boards than the shelves, set on end. */
+  --wood-back: #a2784f;
+  --wood-back-deep: #8a6340;
   /* Grain is a soft touch on pale oak; it can be laid on harder in the dark. */
   --grain-blend: soft-light;
   --grid-empty: #e4dccc;
@@ -177,7 +179,8 @@
   --wood-bottom: #2e1e13;
   --wood-carve: #1a100a;
   --wood-glint: rgba(255, 220, 180, 0.16);
-  --wood-wall: #0f0c0a;
+  --wood-back: #3b2818;
+  --wood-back-deep: #2a1b10;
   --grain-blend: overlay;
   --grid-empty: #262019;
   --shadow: rgba(0, 0, 0, 0.6);
@@ -411,6 +414,8 @@
   --grain-along: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='720'%3E%3Cfilter id='g' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.32 0.005' numOctaves='3' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix values='1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 0 1'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
   --upright: 16px;
   --plank: 38px;
+  /* Width of one board in the back panel. */
+  --board: 132px;
 }
 
 .bookcase {
@@ -452,16 +457,35 @@
   right: 0;
 }
 
+/* The back of the case: boards on end behind the books, a seam every so
+   often, darker toward the edges where the uprights shade them. The same
+   wood by day and by night, so the case stays the same piece of furniture
+   whatever the page around it is doing. */
 .shelf-case {
   display: flex;
   flex-direction: column;
-  background: var(--wood-wall);
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0 calc(var(--board) - 2px),
+      rgba(0, 0, 0, 0.16) calc(var(--board) - 2px) calc(var(--board) - 1px),
+      rgba(255, 240, 215, 0.1) calc(var(--board) - 1px) var(--board)
+    ),
+    var(--grain-along),
+    linear-gradient(
+      90deg,
+      var(--wood-back-deep),
+      var(--wood-back) 12%,
+      var(--wood-back) 88%,
+      var(--wood-back-deep)
+    );
   border-radius: 2px;
   box-shadow:
-    inset 0 22px 24px -22px rgba(50, 32, 14, 0.35),
-    inset 14px 0 18px -14px rgba(50, 32, 14, 0.28),
-    inset -14px 0 18px -14px rgba(50, 32, 14, 0.28),
+    inset 0 22px 24px -22px rgba(30, 18, 8, 0.5),
+    inset 14px 0 18px -14px rgba(30, 18, 8, 0.4),
+    inset -14px 0 18px -14px rgba(30, 18, 8, 0.4),
     0 26px 32px -26px var(--shadow);
+  background-blend-mode: normal, var(--grain-blend), normal;
 }
 
 .shelf-tier {
@@ -553,6 +577,7 @@
   :root {
     --upright: 11px;
     --plank: 32px;
+    --board: 96px;
   }
 
   .shelf-books {
@@ -715,20 +740,22 @@
 }
 
 /* The volume you are living in, before you have written a word of it. */
+/* It stands against the back boards, so it is drawn in chalk, not ink. */
 .spine-unopened {
   gap: 6px;
   width: 44px;
-  color: var(--ink-faint);
-  background: none;
-  border: 1.5px dashed var(--rule-strong);
+  color: rgba(255, 241, 222, 0.78);
+  background: rgba(255, 241, 222, 0.06);
+  border: 1.5px dashed rgba(255, 241, 222, 0.5);
   box-shadow: none;
   filter: none;
 }
 
 .spine-unopened:hover,
 .spine-unopened:focus-visible {
-  color: var(--accent);
-  border-color: var(--accent);
+  color: #fff3e0;
+  background: rgba(255, 241, 222, 0.14);
+  border-color: rgba(255, 241, 222, 0.9);
   box-shadow: none;
 }
 
@@ -775,6 +802,7 @@
 .shelf-mini {
   --upright: 9px;
   --plank: 20px;
+  --board: 72px;
 
   margin: 4px 0 8px;
 }
