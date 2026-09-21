@@ -238,6 +238,7 @@ export function Bookcase({
       ref={ref}
     >
       <div className="shelf-case">
+        <div aria-hidden="true" className="shelf-top" />
         {rows.map((row, rowIndex) => {
           const [first, last] = rowSpan(row, currentPeriodKey);
           const from = settleFrom[rowIndex] ?? 0;

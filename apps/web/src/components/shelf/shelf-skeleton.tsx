@@ -49,6 +49,7 @@ export function ShelfSkeleton() {
       className="bookcase block"
     >
       <div className="shelf-case">
+        <div aria-hidden="true" className="shelf-top" />
         {TIERS.map((tier) => (
           <div className="shelf-tier" key={tier.id}>
             <div className="shelf-books">

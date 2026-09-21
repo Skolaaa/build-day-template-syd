@@ -409,8 +409,8 @@
 :root {
   --grain-across: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='720' height='48'%3E%3Cfilter id='g' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.005 0.32' numOctaves='3' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix values='1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 0 1'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
   --grain-along: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='720'%3E%3Cfilter id='g' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.32 0.005' numOctaves='3' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix values='1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 0 1'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
-  --upright: 14px;
-  --plank: 26px;
+  --upright: 16px;
+  --plank: 38px;
 }
 
 .bookcase {
@@ -481,15 +481,17 @@
 }
 
 /* A plank of oak: a lit top surface, the front edge with the grain running
-   along it, and the shadow it throws on the books and wall beneath. */
-.shelf-plank {
+   along it, and the shadow it throws on the books and wall beneath. The top
+   board is the same plank, closing the case over the highest shelf. */
+.shelf-plank,
+.shelf-top {
   position: relative;
   z-index: 1;
   display: flex;
-  gap: 14px;
+  gap: 18px;
   align-items: center;
   height: var(--plank);
-  padding: 2px 12px 0;
+  padding: 3px 16px 0;
   background:
     var(--grain-across),
     linear-gradient(
@@ -503,15 +505,19 @@
   box-shadow:
     inset 0 1px 0 var(--wood-glint),
     inset 0 -1px 0 rgba(0, 0, 0, 0.28),
-    0 12px 14px -8px rgba(40, 26, 12, 0.55);
+    0 14px 16px -8px rgba(40, 26, 12, 0.55);
   background-blend-mode: var(--grain-blend), normal;
+}
+
+.shelf-top {
+  border-radius: 3px 3px 0 0;
 }
 
 /* Engraved: the letter is the groove, so it is darker than the board, with
    a fine glint where the light from above catches its lower edge. */
 .shelf-carve {
   font-family: var(--font-serif);
-  font-size: 12.5px;
+  font-size: 15px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   line-height: 1;
@@ -526,12 +532,12 @@
 }
 
 .shelf-carve-year {
-  font-size: 15px;
-  letter-spacing: 0.18em;
+  font-size: 21px;
+  letter-spacing: 0.2em;
 }
 
 .shelf-carve-span {
-  padding-left: 14px;
+  padding-left: 18px;
   border-left: 1px solid rgba(0, 0, 0, 0.22);
   box-shadow: -1px 0 0 var(--wood-glint);
   opacity: 0.85;
@@ -539,18 +545,32 @@
 
 .shelf-carve-tally {
   margin-left: auto;
-  font-size: 11px;
+  font-size: 13px;
   opacity: 0.8;
 }
 
 @media (max-width: 640px) {
   :root {
-    --upright: 10px;
-    --plank: 24px;
+    --upright: 11px;
+    --plank: 32px;
   }
 
   .shelf-books {
     padding-inline: 8px;
+  }
+
+  .shelf-plank,
+  .shelf-top {
+    gap: 12px;
+    padding-inline: 10px;
+  }
+
+  .shelf-carve {
+    font-size: 13px;
+  }
+
+  .shelf-carve-year {
+    font-size: 17px;
   }
 
   .shelf-carve-tally {
@@ -753,8 +773,8 @@
 
 /* A miniature of the shelf, for the settings preview. */
 .shelf-mini {
-  --upright: 8px;
-  --plank: 14px;
+  --upright: 9px;
+  --plank: 20px;
 
   margin: 4px 0 8px;
 }
@@ -765,18 +785,19 @@
   padding: 12px 8px 0;
 }
 
-.shelf-mini .shelf-plank {
+.shelf-mini .shelf-plank,
+.shelf-mini .shelf-top {
   gap: 8px;
   padding-inline: 8px;
 }
 
 .shelf-mini .shelf-carve {
-  font-size: 8px;
+  font-size: 9px;
   letter-spacing: 0.1em;
 }
 
 .shelf-mini .shelf-carve-year {
-  font-size: 9px;
+  font-size: 11px;
 }
 
 .shelf-mini .shelf-carve-span {
